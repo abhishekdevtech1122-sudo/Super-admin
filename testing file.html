@@ -1,0 +1,2371 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>STAR ADMIN OMNI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
+    html, body { width: 100%; min-height: 100vh; background-color: #030303; color: #E5E7EB; overflow-x: hidden; user-select: none; }
+    input, textarea, select { user-select: auto !important; }
+    ::selection { background: rgba(212, 175, 55, 0.25); color: #FCF6BA; }
+
+    /* लॉगिन स्क्रीन */
+    .auth-screen { position: fixed; inset: 0; background: #030303; z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; }
+    .auth-card { background: #070709; border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 20px; padding: 26px 22px; width: 100%; max-width: 360px; box-shadow: 0 15px 40px rgba(0,0,0,0.95); text-align: center; }
+    .input-group { margin-bottom: 14px; text-align: left; position: relative; }
+    .input-group label { display: block; font-size: 11px; font-weight: 800; color: #D4AF37; margin-bottom: 6px; letter-spacing: 0.4px; }
+    
+    .input-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
+    .input-group input { width: 100%; padding: 12px 14px; background: #000; border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px; color: #FFF; font-size: 13px; outline: none; transition: border-color 0.2s; }
+    .input-group input:focus { border-color: #D4AF37; }
+    
+    /* प्रीमियम मेटैलिक Eye बटन */
+    .eye-icon-btn { position: absolute; right: 12px; background: transparent; border: none; padding: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.85; }
+    .eye-icon-btn:active { opacity: 1; transform: scale(1.08); }
+    .eye-icon-btn svg { width: 20px; height: 20px; }
+
+    /* 🔄 क्लीन 3D गोल्ड एरो-स्पिनर */
+    .sync-spinner-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #0B0B0E;
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      transition: transform 0.15s ease, border-color 0.2s ease;
+    }
+    .sync-spinner-btn:active { transform: scale(0.9); border-color: #FCF6BA; }
+    .sync-spinner-btn svg { width: 15px; height: 15px; }
+    @keyframes arrowSpin360 { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .sync-spinner-btn.spinning { border-color: #D4AF37; }
+    .sync-spinner-btn.spinning svg { animation: arrowSpin360 0.5s linear infinite; }
+
+    .btn-primary { width: 100%; background: linear-gradient(135deg, #991B1B, #DC2626, #D4AF37); color: #FFF; border: none; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 900; cursor: pointer; margin-top: 8px; transition: transform 0.1s; }
+    .btn-primary:active { transform: scale(0.98); }
+
+    /* मुख्य एप शेल */
+    .app-shell { display: none; flex-direction: column; min-height: 100vh; padding-bottom: 145px; max-width: 480px; margin: 0 auto; position: relative; background: #030303; }
+    .app-shell.active { display: flex; }
+
+    /* टॉप हेडर */
+    .top-header { background: #050505; border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+    .burger-btn { background: transparent; border: none; padding: 8px 4px; cursor: pointer; display: flex; flex-direction: column; gap: 5px; justify-content: center; align-items: flex-start; }
+    .burger-line { display: block; width: 22px; height: 2px; background: linear-gradient(90deg, #FCF6BA, #D4AF37, #AA771C); border-radius: 2px; }
+
+    /* मास्टर कंट्रोल ड्रॉवर */
+    .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 999998; display: none; backdrop-filter: blur(3px); }
+    .drawer-overlay.active { display: block; }
+    .drawer { position: fixed; top: 0; left: -320px; width: 300px; height: 100%; background: #070709; border-right: 1px solid rgba(212, 175, 55, 0.45); z-index: 999999; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 20px; display: flex; flex-direction: column; overflow-y: auto; box-shadow: 10px 0 40px rgba(0,0,0,0.95); }
+    .drawer.active { left: 0; }
+
+    .lang-select-box { width: 100%; padding: 9px 10px; background: #000; color: #FCF6BA; border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 8px; font-size: 11px; font-weight: 800; outline: none; margin-bottom: 8px; cursor: pointer; }
+    .lang-status-bar { font-size: 10px; color: #34D399; margin-top: 6px; display: none; font-weight: 700; }
+
+    .content-area { padding: 14px; }
+
+    /* एरिया ऑडिट सर्च बार */
+    .graph-search-bar { background: #000; border: 1px solid rgba(212,175,55,0.35); border-radius: 8px; padding: 6px 12px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .graph-search-bar input { border: none; outline: none; width: 100%; font-size: 11px; color: #FFF; background: transparent; }
+
+    /* कर्व्ड ग्लोबल सर्च बार */
+    .capsule-search-container { position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%); width: calc(100% - 28px); max-width: 452px; z-index: 90; }
+    .capsule-search-bar { background: rgba(10, 10, 12, 0.96); backdrop-filter: blur(12px); border: 1px solid rgba(212, 175, 55, 0.5); border-radius: 24px; padding: 7px 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.9); }
+    .capsule-search-bar input { border: none; outline: none; width: 100%; font-size: 12px; color: #FFF; background: transparent; }
+
+    /* 👑 अल्ट्रा-क्लीन कार्ड्स और लिस्ट रो */
+    .card { background: #0A0A0C; border: 1px solid rgba(212, 175, 55, 0.28); border-radius: 14px; padding: 14px; margin-bottom: 12px; color: #FFF; }
+    .item-row {
+      background: #0D0D10;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      transition: border-color 0.15s;
+    }
+    .item-row.clickable-staff:active { border-color: #D4AF37; }
+
+    /* ✨ सिर्फ एक्टिव सेक्शन टैब पर क्लीन गोल्डन लाइट */
+    .section-tabs { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 6px; }
+    .sec-tab {
+      flex: 1;
+      padding: 8px 4px;
+      text-align: center;
+      background: transparent !important;
+      border: none !important;
+      font-size: 13px;
+      font-weight: 800;
+      color: #6B7280;
+      cursor: pointer;
+      transition: color 0.2s ease;
+      letter-spacing: 0.4px;
+      position: relative;
+    }
+    .sec-tab.active {
+      color: #FCF6BA !important;
+      font-weight: 900;
+      text-shadow: 0 0 10px rgba(212, 175, 55, 0.55);
+    }
+    .sec-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -7px;
+      left: 24%;
+      right: 24%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #FCF6BA, #D4AF37, transparent);
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.7);
+      border-radius: 2px;
+    }
+
+    /* शार्प और क्लीन टेक्स्ट क्लासेस */
+    .clean-zone-label { color: #D4AF37; font-size: 10px; font-weight: 700; margin-left: 6px; }
+    .clean-status { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; }
+    .clean-status.approved { color: #10B981; }
+    .clean-status.blocked { color: #EF4444; }
+    .clean-status.pending { color: #F59E0B; }
+
+    .clean-action-btn {
+      background: transparent;
+      border: none;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 6px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .clean-action-btn:active { transform: scale(0.94); }
+    .clean-action-btn.gold-highlight {
+      color: #D4AF37;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.45);
+    }
+    .clean-action-btn.green-highlight { color: #10B981; }
+    .clean-action-btn.red-muted { color: #F87171; opacity: 0.85; }
+
+    /* 📈 ट्रेडिंग वेक्टर ग्राफ कंट्रोल्स और 6 परफॉर्मेंस ग्रेड इंडिकेटर्स */
+    .trading-controls-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .tf-btn-group { display: flex; gap: 6px; align-items: center; }
+    .tf-btn { background: transparent; border: none; color: #6B7280; font-size: 10px; font-weight: 800; cursor: pointer; padding: 3px 5px; transition: color 0.15s; }
+    .tf-btn.active { color: #FCF6BA; border-bottom: 1.5px solid #D4AF37; font-weight: 900; }
+
+    .grade-meter-strip { display: flex; justify-content: space-between; align-items: center; gap: 4px; padding: 6px 8px; background: #050507; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); }
+    .grade-item { font-size: 8.5px; font-weight: 800; color: #4B5563; letter-spacing: 0.3px; transition: all 0.2s; }
+    .grade-item.active-loss { color: #EF4444; font-weight: 900; font-size: 9.5px; border-bottom: 1.5px solid #EF4444; }
+    .grade-item.active-poor { color: #F97316; font-weight: 900; font-size: 9.5px; border-bottom: 1.5px solid #F97316; }
+    .grade-item.active-average { color: #F59E0B; font-weight: 900; font-size: 9.5px; border-bottom: 1.5px solid #F59E0B; }
+    .grade-item.active-good { color: #38BDF8; font-weight: 900; font-size: 9.5px; border-bottom: 1.5px solid #38BDF8; }
+    .grade-item.active-verygood { color: #10B981; font-weight: 900; font-size: 9.5px; border-bottom: 1.5px solid #10B981; }
+    .grade-item.active-excellent { color: #FCF6BA; font-weight: 900; font-size: 9.5px; border-bottom: 1.5px solid #D4AF37; }
+
+    /* 👤 फुल-स्क्रीन स्टाफ परफॉर्मेंस कमांड पेज (<1ms Sub-Millisecond Dossier) */
+    .staff-dossier-page {
+      position: fixed;
+      inset: 0;
+      background: #030303;
+      z-index: 999995;
+      display: none;
+      flex-direction: column;
+      max-width: 480px;
+      margin: 0 auto;
+      overflow-y: auto;
+      padding-bottom: 40px;
+    }
+    .staff-dossier-page.active { display: flex; }
+    .dossier-header {
+      background: #050505;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.35);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .dossier-metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+    .dossier-metric-cell { background: #07070A; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 6px; text-align: center; }
+    .dossier-metric-cell .lbl { font-size: 9px; color: #9CA3AF; font-weight: 700; }
+    .dossier-metric-cell .val { font-size: 13px; color: #F3F4F6; font-weight: 900; margin-top: 2px; }
+
+    /* लाइव इंडिकेटर */
+    .live-dot { display: inline-block; width: 7px; height: 7px; background: #10B981; border-radius: 50%; margin-right: 6px; }
+
+    /* 🧮 इन-बिल्ट लाइफटाइम रियल-टाइम कैलकुलेटर पैनल */
+    .calc-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999999; display: none; justify-content: center; align-items: center; padding: 18px; backdrop-filter: blur(6px); }
+    .calc-modal-overlay.active { display: flex; }
+    .calc-shell { background: #08080B; border: 1px solid rgba(212, 175, 55, 0.5); border-radius: 18px; width: 100%; max-width: 330px; padding: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.95); }
+    .calc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.07); padding-bottom: 8px; }
+    .calc-screen { background: #000; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 12px 14px; text-align: right; margin-bottom: 12px; min-height: 76px; display: flex; flex-direction: column; justify-content: space-between; }
+    .calc-expr { font-size: 14px; color: #9CA3AF; font-family: monospace; word-break: break-all; min-height: 20px; }
+    .calc-preview { font-size: 24px; font-weight: 900; color: #FCF6BA; font-family: monospace; word-break: break-all; margin-top: 4px; }
+    .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .calc-key { background: #121217; border: 1px solid rgba(255,255,255,0.06); color: #FFF; font-size: 16px; font-weight: 800; padding: 14px 0; border-radius: 10px; cursor: pointer; text-align: center; user-select: none; transition: background 0.1s, transform 0.08s; }
+    .calc-key:active { transform: scale(0.94); background: #1F1F27; }
+    .calc-key.op { color: #D4AF37; background: #151410; border-color: rgba(212, 175, 55, 0.25); }
+    .calc-key.danger { color: #F87171; background: #191012; }
+    .calc-key.equal { background: linear-gradient(135deg, #D4AF37, #AA771C); color: #000; font-weight: 900; border: none; box-shadow: 0 0 12px rgba(212, 175, 55, 0.35); }
+
+    /* 3D मैटेलिक रेड-गोल्ड बॉटम नेविगेशन बार */
+    .bottom-nav { position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; max-width: 480px !important; margin: 0 auto !important; height: 60px !important; background: rgba(10, 10, 12, 0.96) !important; backdrop-filter: blur(20px) !important; border-top: 1px solid rgba(212, 175, 55, 0.35) !important; display: flex !important; justify-content: space-around !important; align-items: center !important; z-index: 9999 !important; }
+    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 9px; color: #9CA3AF; cursor: pointer; user-select: none; height: 100%; transition: color 0.25s ease; }
+    .nav-item.active { color: #FCF6BA !important; font-weight: 800; }
+    
+    .nav-item .icon { display: flex; align-items: center; justify-content: center; height: 28px; margin-bottom: 2px; }
+    .nav-item .icon svg { transition: all 0.25s ease; }
+    .nav-item:not(.active) .icon svg { filter: sepia(1) saturate(3) hue-rotate(0deg) brightness(0.7) opacity(0.5); transform: scale(0.85); }
+    .nav-item.active .icon svg { filter: sepia(1) saturate(5) hue-rotate(5deg) brightness(1.2) drop-shadow(0 2px 8px rgba(212, 175, 55, 0.5)); transform: scale(1.12); opacity: 1; }
+
+    .pane { display: none; }
+    .pane.active { display: block; }
+
+    /* कस्टम इन-ऐप मोडल */
+    .custom-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 99999999; display: none; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(5px); }
+    .custom-modal.active { display: flex; }
+    .custom-modal-card { background: #070709; border: 1px solid #D4AF37; border-radius: 16px; padding: 20px; width: 100%; max-width: 340px; text-align: center; color: #FFF; box-shadow: 0 15px 40px rgba(0,0,0,0.9); max-height: 80vh; overflow-y: auto; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- 3D मैटेलिक गोल्ड ग्रेडिएंट और एरो-स्पिनर डेफिनिशन -->
+  <svg width="0" height="0" style="position:absolute; width:0; height:0;">
+    <defs>
+      <linearGradient id="metalGold3D" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FCF6BA"/>
+        <stop offset="25%" stop-color="#D4AF37"/>
+        <stop offset="50%" stop-color="#AA771C"/>
+        <stop offset="80%" stop-color="#85581A"/>
+        <stop offset="100%" stop-color="#FCF6BA"/>
+      </linearGradient>
+      <filter id="goldDropShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#D4AF37" flood-opacity="0.4"/>
+      </filter>
+      <g id="arrowSpinnerSymbol">
+        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" fill="none" stroke="url(#metalGold3D)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="3 3 3 8 8 8" fill="none" stroke="url(#metalGold3D)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" fill="none" stroke="url(#metalGold3D)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="16 16 21 16 21 21" fill="none" stroke="url(#metalGold3D)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </defs>
+  </svg>
+
+  <!-- कस्टम इन-ऐप मोडल -->
+  <div class="custom-modal" id="customModalBox">
+    <div class="custom-modal-card">
+      <div id="customModalText" style="font-size: 13px; font-weight: 800; color: #FCF6BA; margin-bottom: 12px; line-height: 1.4;">सूचना</div>
+      <div id="customModalActionBody"></div>
+      <button class="btn-primary" id="customModalCloseBtn" style="margin-top:10px; padding:9px;" onclick="closeCustomModal()">ठीक है</button>
+    </div>
+  </div>
+
+  <!-- 👤 अलग फुल-स्क्रीन स्टाफ परफॉर्मेंस एवं ऑल-टाइम एक्टिविटी डॉसियर पेज (<1ms Instant Load) -->
+  <div class="staff-dossier-page" id="staffDossierPage">
+    <header class="dossier-header">
+      <button onclick="closeStaffDossierPage()" class="clean-action-btn gold-highlight" style="font-size:12px;">← वापस</button>
+      <div style="text-align:center;">
+        <div id="dossierStaffNameTitle" style="font-size:14px; font-weight:900; color:#FCF6BA;">STAFF DOSSIER</div>
+        <div id="dossierLatencyTag" style="font-size:9px; color:#10B981; font-family:monospace;">⚡ 0.08 ms (1/1000s Engine)</div>
+      </div>
+      <span id="dossierCurrentGradeBadge" style="font-size:11px; font-weight:900; color:#D4AF37;">EXCELLENT</span>
+    </header>
+
+    <div style="padding: 14px;">
+      <!-- टाइमफ्रेम स्विच (Day, Month, Year, All-Time) + 8+8 / 10+10 Year कमांड बॉक्स -->
+      <div class="card" style="background:#070709; padding:12px;">
+        <div class="trading-controls-row">
+          <div class="tf-btn-group">
+            <button class="tf-btn" id="dosTf-day" onclick="switchDossierTimeframe('day')">दिन (1D)</button>
+            <button class="tf-btn" id="dosTf-month" onclick="switchDossierTimeframe('month')">महीना (1M)</button>
+            <button class="tf-btn" id="dosTf-year" onclick="switchDossierTimeframe('year')">साल (1Y)</button>
+            <button class="tf-btn active" id="dosTf-all" onclick="switchDossierTimeframe('all')">शुरू से अंत तक (ALL)</button>
+          </div>
+          <span id="dossierActiveRangeLabel" style="font-size:9px; color:#9CA3AF; font-family:monospace;">ALL-TIME</span>
+        </div>
+
+        <div class="graph-search-bar" style="margin-bottom:0;">
+          <input type="text" id="dossierCustomTimeInput" placeholder="कमांड टाइप करें (जैसे: 8 + 8 year, 10 + 10 year, 6 month, 5 day)..." oninput="executeDossierCustomTimeQuery(this.value)">
+          <button onclick="executeDossierCustomTimeQuery(document.getElementById('dossierCustomTimeInput').value)" class="clean-action-btn gold-highlight">लागू</button>
+        </div>
+      </div>
+
+      <!-- स्टाफ पर्सनल फ्लोटिंग ट्रेडिंग एरो ग्राफ -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <div style="font-size:11px; font-weight:900; color:#D4AF37;"><span class="live-dot"></span>पर्सनल ट्रेडिंग वेक्टर ग्राफ (Floating Arrow)</div>
+          <span id="dossierVectorDelta" style="font-size:10px; font-weight:900; color:#10B981;">↗ ACTIVE</span>
+        </div>
+
+        <!-- 6 परफॉर्मेंस ग्रेड मीटर -->
+        <div class="grade-meter-strip" id="dossierGradeStrip">
+          <span class="grade-item" data-grade="LOSS">LOSS</span>
+          <span class="grade-item" data-grade="POOR">POOR</span>
+          <span class="grade-item" data-grade="AVERAGE">AVERAGE</span>
+          <span class="grade-item" data-grade="GOOD">GOOD</span>
+          <span class="grade-item" data-grade="VERY GOOD">VERY GOOD</span>
+          <span class="grade-item" data-grade="EXCELLENT">EXCELLENT</span>
+        </div>
+
+        <div style="width:100%; height:155px; position:relative;">
+          <canvas id="chartStaffPersonalVector"></canvas>
+        </div>
+      </div>
+
+      <!-- 4 मुख्य परफॉर्मेंस काउंटर्स -->
+      <div class="dossier-metrics-grid">
+        <div class="dossier-metric-cell">
+          <div class="lbl">कुल एक्शन</div>
+          <div class="val" id="dosStatTotal">0</div>
+        </div>
+        <div class="dossier-metric-cell">
+          <div class="lbl">अप्रूव्ड/सपोर्ट</div>
+          <div class="val" id="dosStatPositive" style="color:#10B981;">0</div>
+        </div>
+        <div class="dossier-metric-cell">
+          <div class="lbl">ब्लॉक/अलर्ट</div>
+          <div class="val" id="dosStatNegative" style="color:#EF4444;">0</div>
+        </div>
+        <div class="dossier-metric-cell">
+          <div class="lbl">अटेंडेंस/लॉगिन</div>
+          <div class="val" id="dosStatLogins" style="color:#D4AF37;">0</div>
+        </div>
+      </div>
+
+      <!-- शुरू से अंत तक की पूरी क्रोनोलॉजिकल एक्टिविटी लिस्ट -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div style="font-size:12px; font-weight:900; color:#FCF6BA;">संपूर्ण एक्टिविटी रिकॉर्ड लिस्ट</div>
+          <span id="dossierListCountBadge" style="font-size:10px; color:#9CA3AF;">0 रिकॉर्ड</span>
+        </div>
+        <div id="dossierActivityFullList" style="max-height: 420px; overflow-y: auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🧮 लाइफटाइम रियल-टाइम कैलकुलेटर टर्मिनल (Zero-Bug, Zero-Eval) -->
+  <div class="calc-modal-overlay" id="liveCalculatorModal">
+    <div class="calc-shell">
+      <div class="calc-header">
+        <span style="font-size:12px; font-weight:900; color:#D4AF37; letter-spacing:0.6px;">OMNI LIVE CALCULATOR</span>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button onclick="copyCalcResult()" class="clean-action-btn gold-highlight" style="font-size:10px;">कॉपी</button>
+          <button onclick="closeLiveCalculator()" style="background:none; border:none; color:#9CA3AF; font-size:13px; font-weight:900; cursor:pointer;">✕</button>
+        </div>
+      </div>
+      <div class="calc-screen">
+        <div class="calc-expr" id="calcExprDisplay">0</div>
+        <div class="calc-preview" id="calcResultPreview">0</div>
+      </div>
+      <div class="calc-grid">
+        <button class="calc-key danger" onclick="calcInputAction('AC')">AC</button>
+        <button class="calc-key op" onclick="calcInputAction('DEL')">⌫</button>
+        <button class="calc-key op" onclick="calcInputAction('%')">%</button>
+        <button class="calc-key op" onclick="calcInputAction('/')">÷</button>
+
+        <button class="calc-key" onclick="calcInputAction('7')">7</button>
+        <button class="calc-key" onclick="calcInputAction('8')">8</button>
+        <button class="calc-key" onclick="calcInputAction('9')">9</button>
+        <button class="calc-key op" onclick="calcInputAction('*')">×</button>
+
+        <button class="calc-key" onclick="calcInputAction('4')">4</button>
+        <button class="calc-key" onclick="calcInputAction('5')">5</button>
+        <button class="calc-key" onclick="calcInputAction('6')">6</button>
+        <button class="calc-key op" onclick="calcInputAction('-')">−</button>
+
+        <button class="calc-key" onclick="calcInputAction('1')">1</button>
+        <button class="calc-key" onclick="calcInputAction('2')">2</button>
+        <button class="calc-key" onclick="calcInputAction('3')">3</button>
+        <button class="calc-key op" onclick="calcInputAction('+')">+</button>
+
+        <button class="calc-key" onclick="calcInputAction('00')">00</button>
+        <button class="calc-key" onclick="calcInputAction('0')">0</button>
+        <button class="calc-key" onclick="calcInputAction('.')">.</button>
+        <button class="calc-key equal" onclick="calcInputAction('=')">=</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔐 कीवर्ड-पासवर्ड लॉगिन वॉल्ट -->
+  <div class="auth-screen" id="authScreen">
+    <div class="auth-card">
+      <div style="font-size:17px; font-weight:900; color:#D4AF37; margin-bottom:4px; letter-spacing:1px;">STAR ADMIN OMNI</div>
+      <div style="font-size:10px; color:#9CA3AF; margin-bottom:18px;">कीवर्ड पासवर्ड सुरक्षा वॉल्ट</div>
+      <div class="input-group">
+        <label>अधिकृत ऑपरेटर नाम</label>
+        <div class="input-wrapper">
+          <input type="text" id="loginName" placeholder="अपना नाम टाइप करें..." autocomplete="off">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>सीक्रेट कीवर्ड पासवर्ड (नाम / शब्द / सिंबल)</label>
+        <div class="input-wrapper">
+          <input type="password" id="loginPin" placeholder="कीबोर्ड से गुप्त पासवर्ड टाइप करें..." autocomplete="off" style="padding-right: 44px;" onkeydown="if(event.key==='Enter') handleLogin()">
+          <button type="button" class="eye-icon-btn" onclick="toggleLoginPasswordVisibility(this)" title="पासवर्ड देखें / छिपाएं">
+            <svg id="eyeSvgIcon" viewBox="0 0 24 24" fill="none" stroke="url(#metalGold3D)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <button class="btn-primary" id="masterLoginBtn" onclick="handleLogin()">वॉल्ट अनलॉक करें</button>
+      <div id="loginErr" style="color:#F87171; font-size:11px; font-weight:700; margin-top:10px; display:none;"></div>
+    </div>
+  </div>
+
+  <!-- स्लीक मास्टर कंट्रोल ड्रॉवर -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="toggleBurger()"></div>
+  <div class="drawer" id="burgerDrawer">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid rgba(212,175,55,0.25); padding-bottom:10px;">
+      <div style="font-size:13px; font-weight:900; color:#D4AF37; letter-spacing:0.5px;">मास्टर कंट्रोल पैनल</div>
+      <button onclick="toggleBurger()" style="background:none; border:none; color:#D4AF37; font-size:12px; font-weight:900; cursor:pointer;">बंद करें</button>
+    </div>
+
+    <!-- 🌐 जीरो-बैनर प्योर न्यूरल क्लाउड लैंग्वेज इंजन -->
+    <div class="card" style="margin-bottom:12px; border:1px solid rgba(212,175,55,0.45); background:#09090C;">
+      <div style="font-size:11px; font-weight:900; color:#FCF6BA; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
+        <span>सिस्टम लैंग्वेज इंजन (Cloud)</span>
+        <span id="activeLangBadge" class="clean-zone-label">HI</span>
+      </div>
+      <select id="cloudLanguageSelector" class="lang-select-box">
+        <option value="hi">हिन्दी (Hindi - मूल सिस्टम)</option>
+        <option value="en">English (अंग्रेज़ी - Global)</option>
+        <option value="pa">ਪੰਜਾਬੀ (Punjabi - पंजाबी)</option>
+        <option value="mr">मराठी (Marathi)</option>
+        <option value="gu">ગુજરાતી (Gujarati - गुजराती)</option>
+        <option value="bn">বাংলা (Bengali - बंगाली)</option>
+        <option value="ta">தமிழ் (Tamil - तमिल)</option>
+        <option value="te">తెలుగు (Telugu - तेलुगु)</option>
+        <option value="kn">ಕನ್ನಡ (Kannada - कन्नड़)</option>
+        <option value="ml">മലയാളം (Malayalam)</option>
+        <option value="ur">اردو (Urdu - उर्दू)</option>
+        <option value="ar">العربية (Arabic - अरबी)</option>
+        <option value="ru">Русский (Russian - रशियन)</option>
+        <option value="es">Español (Spanish - स्पेनिश)</option>
+        <option value="fr">Français (French - फ्रेंच)</option>
+        <option value="de">Deutsch (German - जर्मन)</option>
+        <option value="ja">日本語 (Japanese - जापानी)</option>
+      </select>
+      <button class="btn-primary" style="margin-top:0; padding:9px; font-size:11px; background:linear-gradient(135deg, #D4AF37, #AA771C); color:#000;" onclick="downloadAndApplySystemLanguage()">लैंग्वेज डाउनलोड एवं पूरे सिस्टम पर लागू करें</button>
+      <div id="langDownloadStatus" class="lang-status-bar">क्लाउड से भाषा पैक सिंक हो रहा है...</div>
+    </div>
+
+    <!-- मास्टर किल स्विच (404 कंट्रोल) -->
+    <div class="card" style="margin-bottom:12px; border:1px solid rgba(220,38,38,0.5);">
+      <div style="font-size:11px; font-weight:900; color:#F87171; margin-bottom:8px;">पोर्टल अथॉरिटी (मास्टर किल स्विच)</div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-primary" style="margin-top:0; padding:8px; font-size:11px; background:#059669;" onclick="setPortalState(true)">चालू रखें</button>
+        <button class="btn-primary" style="margin-top:0; padding:8px; font-size:11px; background:#DC2626;" onclick="setPortalState(false)">तुरंत 404</button>
+      </div>
+    </div>
+
+    <!-- ऑटो-अप्रूव और बल्क ब्रॉडकास्ट इंजन -->
+    <div class="card" style="margin-bottom:12px; border:1px solid rgba(52,211,153,0.4);">
+      <div style="font-size:11px; font-weight:900; color:#34D399; margin-bottom:8px;">ऑटो-अप्रूव एवं बल्क एक्शन</div>
+      <button class="btn-primary" style="margin-top:0; padding:9px; font-size:11px; background:#059669; margin-bottom:8px;" onclick="autoApproveAllPendingMerchants()">सभी पेंडिंग दुकानें ऑटो-अप्रूव करें</button>
+      <button class="btn-primary" style="margin-top:0; padding:9px; font-size:11px; background:#2563EB;" onclick="openBulkMessageModal()">बल्क ब्रॉडकास्ट एवं WhatsApp भेजें</button>
+    </div>
+
+    <!-- नया स्टाफ जोड़ें -->
+    <div class="card">
+      <div style="font-size:11px; font-weight:900; color:#D4AF37; margin-bottom:8px;">नया स्टाफ रजिस्टर करें</div>
+      <input type="text" id="newStaffName" placeholder="स्टाफ का नाम" style="width:100%; padding:9px; background:#000; color:#FFF; border:1px solid rgba(212,175,55,0.3); border-radius:6px; font-size:11px; margin-bottom:8px; outline:none;">
+      <div class="input-wrapper" style="margin-bottom:8px;">
+        <input type="password" id="newStaffPin" placeholder="कीवर्ड पासवर्ड (उदा: Abhi@Star99)" style="width:100%; padding:9px 38px 9px 9px; background:#000; color:#FFF; border:1px solid rgba(212,175,55,0.3); border-radius:6px; font-size:11px; outline:none;">
+        <button type="button" class="eye-icon-btn" style="right:8px;" onclick="toggleInputEye('newStaffPin', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="url(#metalGold3D)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+          </svg>
+        </button>
+      </div>
+      <button class="btn-primary" style="margin-top:0; padding:9px; font-size:11px;" onclick="addNewStaffToDb()">डेटाबेस में स्टाफ जोड़ें</button>
+    </div>
+  </div>
+
+  <!-- मुख्य एप शेल -->
+  <div class="app-shell" id="mainShell">
+    <header class="top-header">
+      <button class="burger-btn" onclick="toggleBurger()" title="मास्टर कंट्रोल">
+        <span class="burger-line"></span>
+        <span class="burger-line" style="width: 15px;"></span>
+      </button>
+      <div style="font-size:14px; font-weight:900; background:linear-gradient(to right, #BF953F, #FCF6BA, #B38728); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:1px;">STAR ADMIN OMNI</div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button class="sync-spinner-btn" style="width:26px; height:26px;" onclick="triggerLiveSpinSync(this, 'all')" title="पूरा डेटाबेस रिफ्रेश करें">
+          <svg viewBox="0 0 24 24"><use href="#arrowSpinnerSymbol"/></svg>
+        </button>
+        <div style="font-size:11px; color:#10B981; font-weight:800; font-family:monospace;" id="timerDisplay">00:00</div>
+      </div>
+    </header>
+
+    <div class="content-area">
+      
+      <!-- ✨ क्लीन सेक्शन स्विच -->
+      <div class="section-tabs">
+        <div class="sec-tab active" id="tabBtn-admin" onclick="switchSection('admin', this)">Admin</div>
+        <div class="sec-tab" id="tabBtn-staff" onclick="switchSection('staff', this)">Staff</div>
+        <div class="sec-tab" id="tabBtn-merchant" onclick="switchSection('merchant', this)">Merchant</div>
+      </div>
+
+      <!-- 1. एडमिन सेक्शन -->
+      <div class="pane active" id="pane-admin">
+        <div class="card" style="background:#070709; border:1px solid rgba(212,175,55,0.4);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-size:11px; font-weight:900; color:#D4AF37;"><span class="live-dot"></span>रियल-टाइम एरिया ऑडिट इंजन</div>
+            <button class="sync-spinner-btn" onclick="triggerLiveSpinSync(this, 'audit')" title="ऑडिट और ग्राफ रिफ्रेश करें">
+              <svg viewBox="0 0 24 24"><use href="#arrowSpinnerSymbol"/></svg>
+            </button>
+          </div>
+          <div class="graph-search-bar">
+            <input type="text" id="areaAuditInput" placeholder="एरिया खोजें (जैसे: बेगमपुर, रोहिणी, दिल्ली)..." oninput="executeAreaAudit()" onkeydown="if(event.key==='Enter') executeAreaAudit()">
+            <button onclick="executeAreaAudit()" class="clean-action-btn gold-highlight">ऑडिट</button>
+          </div>
+          <div id="areaAuditStats" style="font-size:11px; color:#E5E7EB; margin-top:6px;"></div>
+        </div>
+
+        <!-- ग्राफ 1 (UNCHANGED) -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <div style="font-size:11px; font-weight:900; color:#D4AF37;"><span class="live-dot"></span>1. ज़ोन अनुसार मर्चेंट वितरण (टैप करके देखें)</div>
+            <span id="graph1TotalBadge" class="clean-zone-label">0 स्टोर</span>
+          </div>
+          <div style="width:100%; height:160px; position:relative;"><canvas id="chartMerchantSearch"></canvas></div>
+        </div>
+
+        <!-- ग्राफ 2 (UNCHANGED) -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <div style="font-size:11px; font-weight:900; color:#10B981;"><span class="live-dot"></span>2. ज़ोन रेवेन्यू (₹) एवं ग्राहक फुटफॉल</div>
+            <span id="graph2TotalBadge" class="clean-status approved">₹0</span>
+          </div>
+          <div style="width:100%; height:165px; position:relative;"><canvas id="chartBusinessRevenue"></canvas></div>
+        </div>
+
+        <!-- 📈 ग्राफ 3 (UPGRADED: हवा में तैरता हुआ ट्रेडिंग वेक्टर एरो ग्राफ + 6 परफॉर्मेंस ग्रेड्स + पोर्टल/सिंगल बंदा/8+8 Year कमांड) -->
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <div style="font-size:11px; font-weight:900; color:#D4AF37;"><span class="live-dot"></span>3. लाइव ट्रेडिंग वेक्टर परफॉर्मेंस (Floating Arrow)</div>
+            <span id="graph3TotalBadge" style="font-size:11px; font-weight:900; color:#FCF6BA;">EXCELLENT</span>
+          </div>
+
+          <!-- पोर्टल या सिंगल बंदा + टाइमफ्रेम (1D, 1M, 1Y, ALL) कंट्रोल्स -->
+          <div class="trading-controls-row">
+            <select id="tradingTargetSelector" onchange="updateTradingGraph3()" style="background:#000; color:#FCF6BA; border:1px solid rgba(212,175,55,0.35); border-radius:6px; padding:4px 8px; font-size:10px; font-weight:800; outline:none; max-width:155px;">
+              <option value="PORTAL_ALL">पूरा एडमिन पोर्टल (ALL)</option>
+            </select>
+            <div class="tf-btn-group">
+              <button class="tf-btn" id="g3Tf-day" onclick="setGraph3Timeframe('day')">1D</button>
+              <button class="tf-btn" id="g3Tf-month" onclick="setGraph3Timeframe('month')">1M</button>
+              <button class="tf-btn" id="g3Tf-year" onclick="setGraph3Timeframe('year')">1Y</button>
+              <button class="tf-btn active" id="g3Tf-all" onclick="setGraph3Timeframe('all')">ALL</button>
+            </div>
+          </div>
+
+          <!-- 8 + 8 Year / 10 + 10 Year या सिंगल स्टाफ परफॉर्मेंस कमांड बार -->
+          <div class="graph-search-bar" style="margin-bottom:8px;">
+            <input type="text" id="graph3CommandInput" placeholder="कमांड: '8 + 8 year', '10 + 10 year', '1 month', या स्टाफ नाम..." oninput="handleGraph3CommandInput(this.value)">
+            <span id="graph3LatencyBadge" style="font-size:9px; color:#10B981; font-family:monospace; white-space:nowrap;">0.05 ms</span>
+          </div>
+
+          <!-- 6 परफॉर्मेंस कैटेगरी मीटर: LOSS | POOR | AVERAGE | GOOD | VERY GOOD | EXCELLENT -->
+          <div class="grade-meter-strip" id="graph3GradeStrip">
+            <span class="grade-item" data-grade="LOSS">LOSS</span>
+            <span class="grade-item" data-grade="POOR">POOR</span>
+            <span class="grade-item" data-grade="AVERAGE">AVERAGE</span>
+            <span class="grade-item" data-grade="GOOD">GOOD</span>
+            <span class="grade-item" data-grade="VERY GOOD">VERY GOOD</span>
+            <span class="grade-item" data-grade="EXCELLENT">EXCELLENT</span>
+          </div>
+
+          <div style="width:100%; height:170px; position:relative;"><canvas id="chartTotalExpiry"></canvas></div>
+          <div id="graph3LiveSummaryText" style="font-size:10px; color:#9CA3AF; margin-top:6px; display:flex; justify-content:space-between;"></div>
+        </div>
+      </div>
+
+      <!-- 2. स्टाफ सेक्शन (क्लिक करते ही <1ms में अलग फुल-स्क्रीन परफॉर्मेंस पेज खुलेगा) -->
+      <div class="pane" id="pane-staff">
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <div style="font-size:12px; font-weight:900; color:#D4AF37;"><span class="live-dot"></span>अधिकृत स्टाफ डायरेक्टरी <span id="staffTotalBadge" style="color:#9CA3AF; font-size:11px;"></span></div>
+            <button class="sync-spinner-btn" onclick="triggerLiveSpinSync(this, 'staff')" title="स्टाफ डेटा रिफ्रेश करें">
+              <svg viewBox="0 0 24 24"><use href="#arrowSpinnerSymbol"/></svg>
+            </button>
+          </div>
+          <div style="font-size:10px; color:#9CA3AF; margin-bottom:10px;">किसी भी स्टाफ के नाम पर टैप करें — 0.001 सेकंड में पूरी हिस्ट्री और ट्रेडिंग ग्राफ खुलेगा:</div>
+          <div id="staffDirectoryContainer"><div style="font-size:11px; color:#9CA3AF; text-align:center; padding:12px;">डेटाबेस से स्टाफ लोड हो रहा है...</div></div>
+        </div>
+      </div>
+
+      <!-- 3. मर्चेंट सेक्शन -->
+      <div class="pane" id="pane-merchant">
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div style="font-size:12px; font-weight:900; color:#D4AF37;"><span class="live-dot"></span>रजिस्टर्ड मर्चेंट डायरेक्टरी <span id="merchantTotalBadge" style="color:#9CA3AF; font-size:11px;"></span></div>
+            <button class="sync-spinner-btn" onclick="triggerLiveSpinSync(this, 'merchant')" title="मर्चेंट डेटा रिफ्रेश करें">
+              <svg viewBox="0 0 24 24"><use href="#arrowSpinnerSymbol"/></svg>
+            </button>
+          </div>
+          <div id="merchantDirectoryContainer"><div style="font-size:11px; color:#9CA3AF; text-align:center; padding:12px;">डेटाबेस से मर्चेंट लोड हो रहे हैं...</div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- कर्व्ड ग्लोबल सर्च बार + इंस्टेंट कैलकुलेटर और परफॉर्मेंस कमांड ट्रिगर -->
+    <div class="capsule-search-container">
+      <div id="capsuleSearchResults" style="margin-bottom:6px; max-height:150px; overflow-y:auto; font-size:11px;"></div>
+      <div class="capsule-search-bar">
+        <input type="text" id="capsuleSearchInput" placeholder="ग्लोबल सर्च, '8+8 year', या 'calculator' टाइप करें..." oninput="checkInstantCalculatorTrigger(this.value)" onkeydown="if(event.key==='Enter') executeCapsuleOmniSearch()">
+        <button onclick="openLiveCalculator()" title="लाइव कैलकुलेटर खोलें" style="background:none; border:none; color:#D4AF37; font-size:13px; font-weight:900; cursor:pointer; padding:2px 4px;">⊞</button>
+        <button onclick="executeCapsuleOmniSearch()" class="clean-action-btn gold-highlight">सर्च</button>
+      </div>
+    </div>
+
+    <!-- 3D मैटेलिक रेड-गोल्ड बॉटम नेविगेशन बार -->
+    <nav class="bottom-nav">
+      <div class="nav-item active" id="navBtn-admin" onclick="switchPaneNav('admin', this)">
+        <div class="icon">
+          <svg width="24" height="24" viewBox="0 0 100 100">
+            <rect x="20" y="15" width="60" height="70" rx="8" fill="none" stroke="url(#metalGold3D)" stroke-width="8" filter="url(#goldDropShadow)"/>
+            <line x1="35" y1="35" x2="65" y2="35" stroke="url(#metalGold3D)" stroke-width="8" stroke-linecap="round"/>
+            <line x1="35" y1="55" x2="65" y2="55" stroke="url(#metalGold3D)" stroke-width="8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>Admin</div>
+      </div>
+      <div class="nav-item" id="navBtn-staff" onclick="switchPaneNav('staff', this)">
+        <div class="icon">
+          <svg width="24" height="24" viewBox="0 0 100 100">
+            <circle cx="50" cy="35" r="16" fill="url(#metalGold3D)" filter="url(#goldDropShadow)"/>
+            <path d="M 20 85 C 20 60, 35 55, 50 55 C 65 55, 80 60, 80 85" fill="none" stroke="url(#metalGold3D)" stroke-width="8" stroke-linecap="round" filter="url(#goldDropShadow)"/>
+          </svg>
+        </div>
+        <div>Staff</div>
+      </div>
+      <div class="nav-item" id="navBtn-merchant" onclick="switchPaneNav('merchant', this)">
+        <div class="icon">
+          <svg width="24" height="24" viewBox="0 0 100 100">
+            <path d="M 50 15 L 15 45 L 20 45 L 20 85 L 80 85 L 80 45 L 85 45 Z" fill="none" stroke="url(#metalGold3D)" stroke-width="8" stroke-linejoin="round" filter="url(#goldDropShadow)"/>
+            <rect x="40" y="60" width="20" height="25" fill="url(#metalGold3D)" filter="url(#goldDropShadow)"/>
+          </svg>
+        </div>
+        <div>Merchant</div>
+      </div>
+      <div class="nav-item" onclick="toggleBurger()">
+        <div class="icon">
+          <svg width="24" height="24" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="36" fill="none" stroke="url(#metalGold3D)" stroke-width="8" filter="url(#goldDropShadow)"/>
+            <circle cx="50" cy="50" r="12" fill="url(#metalGold3D)" filter="url(#goldDropShadow)"/>
+          </svg>
+        </div>
+        <div>Control</div>
+      </div>
+      <div class="nav-item" onclick="location.reload()">
+        <div class="icon">
+          <svg width="24" height="24" viewBox="0 0 100 100">
+            <rect x="25" y="20" width="50" height="60" rx="6" fill="none" stroke="url(#metalGold3D)" stroke-width="8" filter="url(#goldDropShadow)"/>
+            <line x1="45" y1="50" x2="75" y2="50" stroke="url(#metalGold3D)" stroke-width="8" stroke-linecap="round"/>
+            <polyline points="60,35 75,50 60,65" fill="none" stroke="url(#metalGold3D)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>Exit</div>
+      </div>
+    </nav>
+  </div>
+
+<script>
+  const SUPABASE_URL = "https://gejrzpflcuvlbpedliwq.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_dw9J2AX0nd3SxPrRy9JGCg_YqS8ZfUF";
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let allMerchantsData = [];
+  let allStaffData = [];
+  let allClaimsData = [];
+  let allRevenueData = [];
+  let allStaffLogsData = [];
+  let allAttendanceData = [];
+  let allAdminCoreLogs = [];
+  let allQueriesData = [];
+
+  // ⚡ O(1) सब-मिलीसेकंड (1/1000s) इन-मेमोरी इंडेक्स
+  let staffChronoIndex = {};
+  let portalChronoStream = [];
+
+  let globalCharts = {};
+  let staffPersonalChart = null;
+  let currentAdminName = "SUPER_ADMIN";
+  let failedLoginAttempts = parseInt(localStorage.getItem('omni_failed_attempts') || '0');
+  let lockoutUntil = parseInt(localStorage.getItem('omni_lockout_until') || '0');
+  let translationCache = {};
+
+  // ग्राफ 3 और स्टाफ डॉसियर के वर्तमान स्टेट्स
+  let graph3CurrentTimeframe = 'all';
+  let graph3CustomWindowMs = null;
+  let graph3CustomWindowLabel = 'ALL-TIME';
+  let activeDossierStaffName = '';
+  let activeDossierTimeframe = 'all';
+  let activeDossierCustomMs = null;
+
+  // 🧮 100% सुरक्षित, बग-फ्री गणितीय इंजन (Zero-Eval Shunting-Yard)
+  let currentCalcExpression = "";
+
+  function safeEvaluateMath(expr) {
+    if (!expr) return 0;
+    let clean = String(expr).replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-').replace(/[^0-9+\-*/.%()]/g, '');
+    clean = clean.replace(/[+\-*/.]+$/, '');
+    if (!clean) return 0;
+
+    clean = clean.replace(/(\d+(\.\d+)?)%/g, '($1/100)');
+    const tokens = clean.match(/(\d+(\.\d+)?|\.\d+|[+\-*/()])/g);
+    if (!tokens) return 0;
+
+    const outputQueue = [];
+    const opStack = [];
+    const precedence = { '+': 1, '-': 1, '*': 2, '/': 2 };
+
+    for (let i = 0; i < tokens.length; i++) {
+      const t = tokens[i];
+      if (!isNaN(t)) {
+        outputQueue.push(parseFloat(t));
+      } else if ((t === '-' || t === '+') && (i === 0 || ['+', '-', '*', '/', '('].includes(tokens[i - 1]))) {
+        if (t === '-' && i + 1 < tokens.length && !isNaN(tokens[i + 1])) {
+          outputQueue.push(-1 * parseFloat(tokens[i + 1]));
+          i++;
+        }
+      } else if (['+', '-', '*', '/'].includes(t)) {
+        while (
+          opStack.length > 0 &&
+          ['+', '-', '*', '/'].includes(opStack[opStack.length - 1]) &&
+          precedence[opStack[opStack.length - 1]] >= precedence[t]
+        ) {
+          outputQueue.push(opStack.pop());
+        }
+        opStack.push(t);
+      } else if (t === '(') {
+        opStack.push(t);
+      } else if (t === ')') {
+        while (opStack.length > 0 && opStack[opStack.length - 1] !== '(') {
+          outputQueue.push(opStack.pop());
+        }
+        opStack.pop();
+      }
+    }
+    while (opStack.length > 0) {
+      outputQueue.push(opStack.pop());
+    }
+
+    const evalStack = [];
+    for (const token of outputQueue) {
+      if (typeof token === 'number') {
+        evalStack.push(token);
+      } else {
+        const b = evalStack.pop() ?? 0;
+        const a = evalStack.pop() ?? 0;
+        if (token === '+') evalStack.push(a + b);
+        else if (token === '-') evalStack.push(a - b);
+        else if (token === '*') evalStack.push(a * b);
+        else if (token === '/') evalStack.push(b === 0 ? 0 : a / b);
+      }
+    }
+    const finalVal = evalStack[0] ?? 0;
+    return Number.isFinite(finalVal) ? Math.round(finalVal * 1000000) / 1000000 : 0;
+  }
+
+  // ⚡ टाइम एक्सप्रेशन पार्सर: "8 + 8 year", "10 + 10 year", "6 month", "15 day", "all" को मिलीसेकंड में बदलता है
+  function parseNaturalTimeCommand(rawInput) {
+    const str = (rawInput || '').trim().toLowerCase();
+    if (!str) return null;
+
+    if (str.includes('all') || str.includes('शुरू') || str.includes('पूरा') || str.includes('सब')) {
+      return { ms: null, label: 'ALL-TIME (शुरू से अंत तक)', matchedStaff: null };
+    }
+
+    // देखें कि क्या किसी स्टाफ का नाम साथ में लिखा है
+    let matchedStaff = null;
+    for (const st of allStaffData) {
+      if (st.name && str.includes(st.name.toLowerCase())) {
+        matchedStaff = st.name;
+        break;
+      }
+    }
+
+    // गणितीय एक्सप्रेशन जैसे "8 + 8" या "10 + 10" या संख्या निकालना
+    const mathMatch = str.match(/([0-9]+(?:\s*[+\-*/]\s*[0-9]+)*)/);
+    let numVal = 1;
+    if (mathMatch && mathMatch[1]) {
+      numVal = safeEvaluateMath(mathMatch[1]);
+      if (!numVal || numVal <= 0) numVal = 1;
+    }
+
+    const DAY_MS = 86400000;
+    if (str.includes('year') || str.includes('yr') || str.includes('साल') || str.includes('वर्ष') || /\by\b/.test(str)) {
+      return { ms: numVal * 365 * DAY_MS, label: `${numVal} YEAR (${numVal} वर्ष)`, matchedStaff };
+    }
+    if (str.includes('month') || str.includes('mo') || str.includes('महीना') || str.includes('महीने') || /\bm\b/.test(str)) {
+      return { ms: numVal * 30 * DAY_MS, label: `${numVal} MONTH (${numVal} माह)`, matchedStaff };
+    }
+    if (str.includes('day') || str.includes('दिन') || str.includes('आज') || /\bd\b/.test(str)) {
+      return { ms: numVal * DAY_MS, label: `${numVal} DAY (${numVal} दिन)`, matchedStaff };
+    }
+
+    if (mathMatch && str.includes('+')) {
+      return { ms: numVal * 365 * DAY_MS, label: `${numVal} YEAR (${numVal} वर्ष)`, matchedStaff };
+    }
+
+    return matchedStaff ? { ms: null, label: 'ALL-TIME', matchedStaff } : null;
+  }
+
+  // 🚀 कस्टम प्लगइन: हवा में उड़ता हुआ ट्रेडिंग एरो (Floating Trading Vector Arrowhead)
+  const floatingTradingVectorArrowPlugin = {
+    id: 'floatingTradingVectorArrowPlugin',
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      const meta = chart.getDatasetMeta(0);
+      if (!meta || !meta.data || meta.data.length === 0) return;
+
+      const pts = meta.data;
+      const lastPt = pts[pts.length - 1];
+      const prevPt = pts.length > 1 ? pts[pts.length - 2] : { x: lastPt.x - 20, y: lastPt.y };
+
+      const angle = Math.atan2(lastPt.y - prevPt.y, lastPt.x - prevPt.x);
+      const strokeColor = chart.data.datasets[0].borderColor || '#10B981';
+
+      ctx.save();
+      ctx.translate(lastPt.x, lastPt.y);
+      ctx.rotate(angle);
+
+      // हवा में उड़ता हुआ बाहरी ग्लो आभा
+      ctx.shadowColor = strokeColor;
+      ctx.shadowBlur = 14;
+
+      // शार्प 3D ट्रेडिंग वेक्टर एरोहेड (Floating Winged Arrow)
+      ctx.beginPath();
+      ctx.moveTo(11, 0);
+      ctx.lineTo(-8, -7);
+      ctx.lineTo(-4, 0);
+      ctx.lineTo(-8, 7);
+      ctx.closePath();
+      ctx.fillStyle = strokeColor;
+      ctx.fill();
+
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = '#FCF6BA';
+      ctx.stroke();
+      ctx.restore();
+    }
+  };
+
+  // 📊 परफॉर्मेंस ग्रेड निर्णय इंजन: LOSS | POOR | AVERAGE | GOOD | VERY GOOD | EXCELLENT
+  function evaluatePerformanceGrade(positiveCount, negativeCount, totalEvents, netTrendDelta) {
+    if (totalEvents === 0) {
+      return { grade: 'LOSS', color: '#EF4444', cls: 'active-loss', score: 0, arrow: '↘ LOSS (0 Activity)' };
+    }
+    const netScore = (positiveCount * 2) - (negativeCount * 3) + (netTrendDelta >= 0 ? 2 : -2);
+    const ratio = positiveCount / Math.max(totalEvents, 1);
+
+    if (netScore < 0 || ratio < 0.25) {
+      return { grade: 'LOSS', color: '#EF4444', cls: 'active-loss', score: netScore, arrow: '↘ LOSS' };
+    }
+    if (totalEvents <= 2 || ratio < 0.45) {
+      return { grade: 'POOR', color: '#F97316', cls: 'active-poor', score: netScore, arrow: '↘ POOR' };
+    }
+    if (totalEvents <= 5 || ratio < 0.6) {
+      return { grade: 'AVERAGE', color: '#F59E0B', cls: 'active-average', score: netScore, arrow: '→ AVERAGE' };
+    }
+    if (totalEvents <= 12 || ratio < 0.75) {
+      return { grade: 'GOOD', color: '#38BDF8', cls: 'active-good', score: netScore, arrow: '↗ GOOD' };
+    }
+    if (totalEvents <= 22 || ratio < 0.88) {
+      return { grade: 'VERY GOOD', color: '#10B981', cls: 'active-verygood', score: netScore, arrow: '↗ VERY GOOD' };
+    }
+    return { grade: 'EXCELLENT', color: '#FCF6BA', cls: 'active-excellent', score: netScore, arrow: '🚀 EXCELLENT' };
+  }
+
+  function highlightGradeStrip(stripId, gradeInfo) {
+    const strip = document.getElementById(stripId);
+    if (!strip) return;
+    strip.querySelectorAll('.grade-item').forEach(el => {
+      el.className = 'grade-item';
+      if (el.getAttribute('data-grade') === gradeInfo.grade) {
+        el.classList.add(gradeInfo.cls);
+      }
+    });
+  }
+
+  // ⚡ O(1) प्री-इंडेक्सर: डेटाबेस की सभी टेबल्स से हर स्टाफ और पूरे पोर्टल का इतिहास RAM में बांधना (<0.1ms एक्सेस के लिए)
+  function buildSubMillisecondChronoIndex() {
+    staffChronoIndex = {};
+    portalChronoStream = [];
+
+    const ensureStaffBucket = (name) => {
+      const key = (name || 'UNKNOWN').trim().toLowerCase();
+      if (!staffChronoIndex[key]) {
+        staffChronoIndex[key] = { displayName: name, events: [] };
+      }
+      return staffChronoIndex[key];
+    };
+
+    allStaffData.forEach(s => {
+      const b = ensureStaffBucket(s.name);
+      b.staffMeta = s;
+      const ts = s.created_at ? new Date(s.created_at).getTime() : Date.now();
+      const ev = {
+        ts,
+        dateStr: new Date(ts).toLocaleString('hi-IN'),
+        title: `स्टाफ अकाउंट रजिस्टर्ड (${s.status || 'Active'})`,
+        target: s.name,
+        impact: s.status === 'Blocked' ? -2 : 2,
+        type: s.status === 'Blocked' ? 'negative' : 'positive'
+      };
+      b.events.push(ev);
+      portalChronoStream.push({ ...ev, actor: s.name });
+    });
+
+    allStaffLogsData.forEach(log => {
+      const sName = log.staff_name || 'Staff';
+      const b = ensureStaffBucket(sName);
+      const ts = log.created_at ? new Date(log.created_at).getTime() : Date.now();
+      const act = (log.action_type || '').toLowerCase();
+      const isNeg = act.includes('block') || act.includes('delete') || act.includes('ब्लॉक') || act.includes('डिलीट');
+      const isLogin = act.includes('login') || act.includes('लॉगिन');
+      const ev = {
+        ts,
+        dateStr: new Date(ts).toLocaleString('hi-IN'),
+        title: log.action_type || 'स्टाफ एक्शन',
+        target: log.target_name || 'System',
+        impact: isNeg ? -1 : 3,
+        type: isLogin ? 'login' : (isNeg ? 'negative' : 'positive')
+      };
+      b.events.push(ev);
+      portalChronoStream.push({ ...ev, actor: sName });
+    });
+
+    allAttendanceData.forEach(att => {
+      const sName = att.staff_name || 'Staff';
+      const b = ensureStaffBucket(sName);
+      const ts = att.login_time ? new Date(att.login_time).getTime() : Date.now();
+      const ev = {
+        ts,
+        dateStr: new Date(ts).toLocaleString('hi-IN'),
+        title: `अटेंडेंस लॉग (${att.status || 'Present'})`,
+        target: 'PORTAL_SHIFT',
+        impact: 2,
+        type: 'login'
+      };
+      b.events.push(ev);
+      portalChronoStream.push({ ...ev, actor: sName });
+    });
+
+    allAdminCoreLogs.forEach(ac => {
+      const sName = ac.admin_name || 'Admin';
+      const b = ensureStaffBucket(sName);
+      const ts = ac.created_at ? new Date(ac.created_at).getTime() : Date.now();
+      const act = (ac.action_taken || '').toLowerCase();
+      const isNeg = act.includes('block') || act.includes('404') || act.includes('brute');
+      const ev = {
+        ts,
+        dateStr: new Date(ts).toLocaleString('hi-IN'),
+        title: `कमांड: ${ac.action_taken}`,
+        target: ac.target_entity || 'SYSTEM',
+        impact: isNeg ? -2 : 3,
+        type: act.includes('login') ? 'login' : (isNeg ? 'negative' : 'positive')
+      };
+      b.events.push(ev);
+      portalChronoStream.push({ ...ev, actor: sName });
+    });
+
+    allMerchantsData.forEach(m => {
+      const ts = m.created_at ? new Date(m.created_at).getTime() : Date.now();
+      const cat = classifyMerchantStatus(m);
+      portalChronoStream.push({
+        ts,
+        dateStr: new Date(ts).toLocaleString('hi-IN'),
+        actor: 'PORTAL',
+        title: `मर्चेंट स्टोर: ${m.store_name || 'स्टोर'} (${m.status || 'approved'})`,
+        target: extractSmartZone(m.address || ''),
+        impact: cat === 'blocked' ? -2 : (cat === 'approved' ? 4 : 1),
+        type: cat === 'blocked' ? 'negative' : 'positive'
+      });
+    });
+
+    // सभी इवेंट्स को समय के अनुसार क्रमबद्ध करना
+    Object.values(staffChronoIndex).forEach(b => b.events.sort((a, c) => c.ts - a.ts));
+    portalChronoStream.sort((a, c) => c.ts - a.ts);
+
+    // ग्राफ 3 के ड्रॉपडाउन में सभी स्टाफ के नाम भरना
+    const sel = document.getElementById('tradingTargetSelector');
+    if (sel) {
+      const currentVal = sel.value;
+      let opts = `<option value="PORTAL_ALL">पूरा एडमिन पोर्टल (ALL)</option>`;
+      const seenNames = new Set();
+      allStaffData.forEach(s => {
+        const key = (s.name || '').trim().toLowerCase();
+        if (key && !seenNames.has(key)) {
+          seenNames.add(key);
+          opts += `<option value="${s.name}">👤 ${s.name}</option>`;
+        }
+      });
+      sel.innerHTML = opts;
+      if ([...sel.options].some(o => o.value === currentVal)) sel.value = currentVal;
+    }
+  }
+
+  function filterEventsByWindow(eventsArray, timeframeMode, customWindowMs) {
+    const now = Date.now();
+    const DAY_MS = 86400000;
+    let cutoff = null;
+
+    if (customWindowMs !== null && customWindowMs !== undefined) {
+      cutoff = now - customWindowMs;
+    } else if (timeframeMode === 'day') {
+      cutoff = now - DAY_MS;
+    } else if (timeframeMode === 'month') {
+      cutoff = now - (30 * DAY_MS);
+    } else if (timeframeMode === 'year') {
+      cutoff = now - (365 * DAY_MS);
+    }
+
+    if (cutoff === null) return eventsArray;
+    return eventsArray.filter(ev => ev.ts >= cutoff);
+  }
+
+  // 📈 ग्राफ 3: फ्लोटिंग ट्रेडिंग वेक्टर ग्राफ रेंडरर
+  function setGraph3Timeframe(tf) {
+    graph3CurrentTimeframe = tf;
+    graph3CustomWindowMs = null;
+    graph3CustomWindowLabel = tf.toUpperCase();
+    document.querySelectorAll('#pane-admin .tf-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById(`g3Tf-${tf}`);
+    if (btn) btn.classList.add('active');
+    updateTradingGraph3();
+  }
+
+  function handleGraph3CommandInput(val) {
+    const t0 = performance.now();
+    const parsed = parseNaturalTimeCommand(val);
+    if (parsed) {
+      graph3CustomWindowMs = parsed.ms;
+      graph3CustomWindowLabel = parsed.label;
+      if (parsed.matchedStaff) {
+        const sel = document.getElementById('tradingTargetSelector');
+        if (sel) sel.value = parsed.matchedStaff;
+      }
+      document.querySelectorAll('#pane-admin .tf-btn').forEach(b => b.classList.remove('active'));
+      if (parsed.ms === null) document.getElementById('g3Tf-all')?.classList.add('active');
+    } else if (!val.trim()) {
+      graph3CustomWindowMs = null;
+      graph3CustomWindowLabel = graph3CurrentTimeframe.toUpperCase();
+    }
+    updateTradingGraph3();
+    const dt = (performance.now() - t0).toFixed(2);
+    const lat = document.getElementById('graph3LatencyBadge');
+    if (lat) lat.innerText = `${dt} ms`;
+  }
+
+  function updateTradingGraph3() {
+    const t0 = performance.now();
+    const sel = document.getElementById('tradingTargetSelector');
+    const target = sel ? sel.value : 'PORTAL_ALL';
+
+    let rawEvents = [];
+    if (target === 'PORTAL_ALL') {
+      rawEvents = portalChronoStream;
+    } else {
+      const bucket = staffChronoIndex[target.trim().toLowerCase()];
+      rawEvents = bucket ? bucket.events : [];
+    }
+
+    const filtered = filterEventsByWindow(rawEvents, graph3CurrentTimeframe, graph3CustomWindowMs);
+    const chronological = [...filtered].reverse();
+
+    let posCount = 0;
+    let negCount = 0;
+    let cumulative = 10;
+    const points = [10];
+    const labels = ['Start'];
+
+    chronological.forEach((ev, idx) => {
+      if (ev.type === 'negative') negCount++;
+      else posCount++;
+      cumulative = Math.max(2, cumulative + (ev.impact || 1));
+      points.push(cumulative);
+      const d = new Date(ev.ts);
+      labels.push(`${d.getDate()}/${d.getMonth() + 1}`);
+    });
+
+    if (points.length === 1) {
+      points.push(10);
+      labels.push('Now');
+    }
+
+    const netDelta = points[points.length - 1] - points[0];
+    const gradeInfo = evaluatePerformanceGrade(posCount, negCount, filtered.length, netDelta);
+
+    highlightGradeStrip('graph3GradeStrip', gradeInfo);
+    const badge = document.getElementById('graph3TotalBadge');
+    if (badge) {
+      badge.innerText = `${gradeInfo.arrow}`;
+      badge.style.color = gradeInfo.color;
+    }
+
+    const ctx3 = document.getElementById('chartTotalExpiry').getContext('2d');
+    if (globalCharts.c3) globalCharts.c3.destroy();
+
+    const grad = ctx3.createLinearGradient(0, 0, 0, 165);
+    grad.addColorStop(0, gradeInfo.color + '44');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+
+    globalCharts.c3 = new Chart(ctx3, {
+      type: 'line',
+      data: {
+        labels: labels.slice(-18),
+        datasets: [{
+          label: 'ट्रेडिंग परफॉर्मेंस इंडेक्स',
+          data: points.slice(-18),
+          borderColor: gradeInfo.color,
+          backgroundColor: grad,
+          borderWidth: 2.5,
+          fill: true,
+          tension: 0.35,
+          pointRadius: (ctx) => ctx.dataIndex === ctx.dataset.data.length - 1 ? 0 : 2,
+          pointBackgroundColor: '#FCF6BA'
+        }]
+      },
+      plugins: [floatingTradingVectorArrowPlugin],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 220 },
+        layout: { padding: { right: 22, top: 14, bottom: 4 } },
+        plugins: { legend: { display: false } },
+        scales: {
+          y: {
+            beginAtZero: false,
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            ticks: { font: { size: 8 }, color: '#6B7280' }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { maxTicksLimit: 6, font: { size: 8 }, color: '#9CA3AF' }
+          }
+        }
+      }
+    });
+
+    const dt = (performance.now() - t0).toFixed(2);
+    const lat = document.getElementById('graph3LatencyBadge');
+    if (lat) lat.innerText = `${dt} ms`;
+
+    const summaryEl = document.getElementById('graph3LiveSummaryText');
+    if (summaryEl) {
+      summaryEl.innerHTML = `
+        <span>स्कोप: <b style="color:#F3F4F6;">${target === 'PORTAL_ALL' ? 'पूरा पोर्टल' : target}</b> (${graph3CustomWindowLabel})</span>
+        <span>इवेंट्स: <b style="color:#FCF6BA;">${filtered.length}</b> | ग्रेड: <b style="color:${gradeInfo.color};">${gradeInfo.grade}</b></span>
+      `;
+    }
+  }
+
+  // 👤 स्टाफ पर क्लिक करते ही <1ms में खुलने वाला अलग फुल-स्क्रीन स्टाफ डॉसियर पेज
+  function openStaffDossierPage(staffName) {
+    const t0 = performance.now();
+    activeDossierStaffName = staffName;
+    activeDossierTimeframe = 'all';
+    activeDossierCustomMs = null;
+
+    document.getElementById('dossierStaffNameTitle').innerText = `${staffName.toUpperCase()} — PERFORMANCE`;
+    document.getElementById('dossierCustomTimeInput').value = '';
+    document.querySelectorAll('#staffDossierPage .tf-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('dosTf-all').classList.add('active');
+
+    document.getElementById('staffDossierPage').classList.add('active');
+    renderStaffDossierView('ALL-TIME (शुरू से अंत तक)', t0);
+  }
+
+  function closeStaffDossierPage() {
+    document.getElementById('staffDossierPage').classList.remove('active');
+  }
+
+  function switchDossierTimeframe(tf) {
+    const t0 = performance.now();
+    activeDossierTimeframe = tf;
+    activeDossierCustomMs = null;
+    document.getElementById('dossierCustomTimeInput').value = '';
+    document.querySelectorAll('#staffDossierPage .tf-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`dosTf-${tf}`)?.classList.add('active');
+
+    const mapLbl = { day: '1 DAY (आज/24 घंटे)', month: '1 MONTH (30 दिन)', year: '1 YEAR (365 दिन)', all: 'ALL-TIME (शुरू से अंत तक)' };
+    renderStaffDossierView(mapLbl[tf] || 'ALL-TIME', t0);
+  }
+
+  function executeDossierCustomTimeQuery(rawVal) {
+    const t0 = performance.now();
+    const parsed = parseNaturalTimeCommand(rawVal);
+    if (parsed) {
+      activeDossierCustomMs = parsed.ms;
+      document.querySelectorAll('#staffDossierPage .tf-btn').forEach(b => b.classList.remove('active'));
+      if (parsed.ms === null) document.getElementById('dosTf-all')?.classList.add('active');
+      renderStaffDossierView(parsed.label, t0);
+    } else if (!rawVal.trim()) {
+      switchDossierTimeframe('all');
+    }
+  }
+
+  function renderStaffDossierView(rangeLabel, startPerfTime) {
+    const key = (activeDossierStaffName || '').trim().toLowerCase();
+    const bucket = staffChronoIndex[key] || { events: [] };
+    const filtered = filterEventsByWindow(bucket.events, activeDossierTimeframe, activeDossierCustomMs);
+
+    let pos = 0, neg = 0, logins = 0;
+    const chronological = [...filtered].reverse();
+    let scoreTrack = 10;
+    const pts = [10];
+    const lbls = ['Start'];
+
+    chronological.forEach(ev => {
+      if (ev.type === 'login') { logins++; pos++; }
+      else if (ev.type === 'negative') neg++;
+      else pos++;
+
+      scoreTrack = Math.max(2, scoreTrack + (ev.impact || 2));
+      pts.push(scoreTrack);
+      const d = new Date(ev.ts);
+      lbls.push(`${d.getDate()}/${d.getMonth() + 1}`);
+    });
+
+    if (pts.length === 1) { pts.push(10); lbls.push('Now'); }
+
+    const delta = pts[pts.length - 1] - pts[0];
+    const gradeInfo = evaluatePerformanceGrade(pos, neg, filtered.length, delta);
+
+    document.getElementById('dossierActiveRangeLabel').innerText = rangeLabel;
+    document.getElementById('dossierCurrentGradeBadge').innerText = gradeInfo.grade;
+    document.getElementById('dossierCurrentGradeBadge').style.color = gradeInfo.color;
+    document.getElementById('dossierVectorDelta').innerText = gradeInfo.arrow;
+    document.getElementById('dossierVectorDelta').style.color = gradeInfo.color;
+
+    highlightGradeStrip('dossierGradeStrip', gradeInfo);
+
+    document.getElementById('dosStatTotal').innerText = filtered.length;
+    document.getElementById('dosStatPositive').innerText = pos;
+    document.getElementById('dosStatNegative').innerText = neg;
+    document.getElementById('dosStatLogins').innerText = logins;
+    document.getElementById('dossierListCountBadge').innerText = `${filtered.length} रिकॉर्ड`;
+
+    // स्टाफ का पर्सनल फ्लोटिंग ट्रेडिंग एरो ग्राफ
+    const ctxP = document.getElementById('chartStaffPersonalVector').getContext('2d');
+    if (staffPersonalChart) staffPersonalChart.destroy();
+    const gradP = ctxP.createLinearGradient(0, 0, 0, 150);
+    gradP.addColorStop(0, gradeInfo.color + '44');
+    gradP.addColorStop(1, 'rgba(0,0,0,0)');
+
+    staffPersonalChart = new Chart(ctxP, {
+      type: 'line',
+      data: {
+        labels: lbls.slice(-16),
+        datasets: [{
+          data: pts.slice(-16),
+          borderColor: gradeInfo.color,
+          backgroundColor: gradP,
+          borderWidth: 2.5,
+          fill: true,
+          tension: 0.35,
+          pointRadius: (c) => c.dataIndex === c.dataset.data.length - 1 ? 0 : 2,
+          pointBackgroundColor: '#FCF6BA'
+        }]
+      },
+      plugins: [floatingTradingVectorArrowPlugin],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 150 },
+        layout: { padding: { right: 22, top: 14, bottom: 4 } },
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 8 }, color: '#6B7280' } },
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 6, font: { size: 8 }, color: '#9CA3AF' } }
+        }
+      }
+    });
+
+    // शुरू से अंत तक की पूरी एक्टिविटी लिस्ट रेंडरिंग
+    const listBox = document.getElementById('dossierActivityFullList');
+    if (filtered.length === 0) {
+      listBox.innerHTML = `<div style="font-size:11px; color:#9CA3AF; text-align:center; padding:18px;">इस समय-सीमा (${rangeLabel}) में कोई एक्टिविटी दर्ज नहीं है (0) — स्थिति: LOSS</div>`;
+    } else {
+      listBox.innerHTML = filtered.map((ev, i) => `
+        <div class="item-row" style="padding:10px 12px; margin-bottom:6px;">
+          <div style="flex:1;">
+            <div style="font-size:12px; font-weight:800; color:#F3F4F6;">#${i + 1} ${ev.title}</div>
+            <div style="font-size:10px; color:#9CA3AF; margin-top:3px;">लक्ष्य: <b style="color:#D4AF37;">${ev.target}</b> &nbsp;|&nbsp; समय: ${ev.dateStr}</div>
+          </div>
+          <span style="font-size:10px; font-weight:900; color:${ev.type === 'negative' ? '#EF4444' : '#10B981'};">
+            ${ev.type === 'negative' ? '↘ ALERT' : '↗ DONE'}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    const elapsedMs = (performance.now() - startPerfTime).toFixed(2);
+    document.getElementById('dossierLatencyTag').innerText = `⚡ ${elapsedMs} ms (1/1000s Instant Engine)`;
+  }
+
+  function openLiveCalculator(initialExpr = "") {
+    if (initialExpr && /^[0-9+\-*/.%()]+$/.test(initialExpr)) {
+      currentCalcExpression = initialExpr;
+    }
+    updateCalcScreenUI();
+    document.getElementById('liveCalculatorModal').classList.add('active');
+  }
+
+  function closeLiveCalculator() {
+    document.getElementById('liveCalculatorModal').classList.remove('active');
+  }
+
+  function calcInputAction(key) {
+    if (key === 'AC') {
+      currentCalcExpression = "";
+    } else if (key === 'DEL') {
+      currentCalcExpression = currentCalcExpression.slice(0, -1);
+    } else if (key === '=') {
+      const ans = safeEvaluateMath(currentCalcExpression);
+      currentCalcExpression = String(ans);
+    } else {
+      const ops = ['+', '-', '*', '/', '%', '.'];
+      const lastChar = currentCalcExpression.slice(-1);
+      if (ops.includes(key) && ops.includes(lastChar)) {
+        currentCalcExpression = currentCalcExpression.slice(0, -1) + key;
+      } else {
+        currentCalcExpression += key;
+      }
+    }
+    updateCalcScreenUI();
+  }
+
+  function updateCalcScreenUI() {
+    const exprEl = document.getElementById('calcExprDisplay');
+    const prevEl = document.getElementById('calcResultPreview');
+    exprEl.innerText = currentCalcExpression ? currentCalcExpression.replace(/\*/g, '×').replace(/\//g, '÷') : '0';
+    const liveAns = safeEvaluateMath(currentCalcExpression);
+    prevEl.innerText = liveAns.toLocaleString('en-IN');
+  }
+
+  function copyCalcResult() {
+    const val = String(safeEvaluateMath(currentCalcExpression));
+    if (navigator.clipboard) navigator.clipboard.writeText(val);
+    showModal(`कैलकुलेटर परिणाम (${val}) कॉपी हो गया है।`);
+  }
+
+  function checkInstantCalculatorTrigger(val) {
+    const clean = (val || '').trim().toLowerCase();
+    if (['calculator', 'calc', 'कैलकुलेटर', 'केलकुलेटर', 'हिसाब'].includes(clean)) {
+      document.getElementById('capsuleSearchInput').value = '';
+      document.getElementById('capsuleSearchResults').innerHTML = '';
+      openLiveCalculator();
+    }
+  }
+
+  window.addEventListener('keydown', (e) => {
+    const modal = document.getElementById('liveCalculatorModal');
+    if (!modal || !modal.classList.contains('active')) return;
+    if (/^[0-9+\-*/.%]$/.test(e.key)) {
+      e.preventDefault();
+      calcInputAction(e.key);
+    } else if (e.key === 'Enter' || e.key === '=') {
+      e.preventDefault();
+      calcInputAction('=');
+    } else if (e.key === 'Backspace') {
+      e.preventDefault();
+      calcInputAction('DEL');
+    } else if (e.key === 'Escape') {
+      closeLiveCalculator();
+    }
+  });
+
+  // 🔄 मास्टर एरो-स्पिनर लाइव सिंक ट्रिगर
+  async function triggerLiveSpinSync(btnEl, targetScope) {
+    if (btnEl && btnEl.classList.contains('spinning')) return;
+    if (btnEl) btnEl.classList.add('spinning');
+
+    const minSpinTime = new Promise(resolve => setTimeout(resolve, 550));
+
+    try {
+      if (targetScope === 'staff') {
+        await Promise.all([fetchStaffMembers(), minSpinTime]);
+      } else if (targetScope === 'audit') {
+        document.getElementById('areaAuditInput').value = '';
+        await Promise.all([loadAllData(), minSpinTime]);
+      } else {
+        await Promise.all([loadAllData(), minSpinTime]);
+      }
+    } catch (e) {}
+
+    if (btnEl) btnEl.classList.remove('spinning');
+  }
+
+  // 👁️ प्रीमियम मेटैलिक गोल्ड Eye आइकॉन टॉगल
+  const OPEN_EYE_SVG = `
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+    <circle cx="12" cy="12" r="3" fill="url(#metalGold3D)"></circle>
+  `;
+  const CLOSED_EYE_SVG = `
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+    <line x1="1" y1="1" x2="23" y2="23"></line>
+  `;
+
+  function toggleLoginPasswordVisibility(btn) {
+    const inp = document.getElementById('loginPin');
+    const svgEl = document.getElementById('eyeSvgIcon');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      svgEl.innerHTML = OPEN_EYE_SVG;
+    } else {
+      inp.type = 'password';
+      svgEl.innerHTML = CLOSED_EYE_SVG;
+    }
+  }
+
+  function toggleInputEye(inputId, btn) {
+    const inp = document.getElementById(inputId);
+    const svgEl = btn.querySelector('svg');
+    if (!inp || !svgEl) return;
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      svgEl.innerHTML = OPEN_EYE_SVG;
+    } else {
+      inp.type = 'password';
+      svgEl.innerHTML = CLOSED_EYE_SVG;
+    }
+  }
+
+  // 🌐 जीरो-बैनर प्योर क्लाउड न्यूरल ट्रांसलेशन इंजन
+  const PLACEHOLDER_ORIGINAL_MAP = [
+    { id: 'loginName', hi: 'अपना नाम टाइप करें...' },
+    { id: 'loginPin', hi: 'कीबोर्ड से गुप्त पासवर्ड टाइप करें...' },
+    { id: 'newStaffName', hi: 'स्टाफ का नाम' },
+    { id: 'newStaffPin', hi: 'कीवर्ड पासवर्ड (उदा: Abhi@Star99)' },
+    { id: 'areaAuditInput', hi: 'एरिया खोजें (जैसे: बेगमपुर, रोहिणी, दिल्ली)...' },
+    { id: 'capsuleSearchInput', hi: "ग्लोबल सर्च, '8+8 year', या 'calculator' टाइप करें..." }
+  ];
+
+  async function translateTextViaInternet(text, targetLang) {
+    const clean = (text || '').trim();
+    if (!clean || targetLang === 'hi' || /^[0-9₹:.,+\-*/()%|\s#]+$/.test(clean)) return text;
+    const cacheKey = `${targetLang}::${clean}`;
+    if (translationCache[cacheKey]) return translationCache[cacheKey];
+
+    try {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${encodeURIComponent(targetLang)}&dt=t&q=${encodeURIComponent(clean)}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data && data[0]) {
+        const translated = data[0].map(seg => seg[0]).join('');
+        translationCache[cacheKey] = translated;
+        return translated;
+      }
+    } catch (e) {}
+    return text;
+  }
+
+  async function translateEntireDOMPure(targetLang) {
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+    const textNodes = [];
+    let node;
+    while ((node = walker.nextNode())) {
+      const parentTag = node.parentElement ? node.parentElement.tagName : '';
+      if (['SCRIPT', 'STYLE', 'SVG', 'OPTION', 'CANVAS'].includes(parentTag)) continue;
+      if (node.nodeValue && node.nodeValue.trim().length > 1) {
+        if (!node._origHiText) node._origHiText = node.nodeValue;
+        textNodes.push(node);
+      }
+    }
+
+    if (targetLang === 'hi') {
+      textNodes.forEach(n => { if (n._origHiText) n.nodeValue = n._origHiText; });
+    } else {
+      await Promise.all(textNodes.map(async (n) => {
+        const src = n._origHiText || n.nodeValue;
+        n.nodeValue = await translateTextViaInternet(src, targetLang);
+      }));
+    }
+
+    for (const item of PLACEHOLDER_ORIGINAL_MAP) {
+      const el = document.getElementById(item.id);
+      if (el) {
+        el.placeholder = targetLang === 'hi' ? item.hi : await translateTextViaInternet(item.hi, targetLang);
+      }
+    }
+  }
+
+  async function downloadAndApplySystemLanguage(forcedLang = null) {
+    const selector = document.getElementById('cloudLanguageSelector');
+    const targetLang = forcedLang || (selector ? selector.value : 'hi');
+    const statusEl = document.getElementById('langDownloadStatus');
+    const badgeEl = document.getElementById('activeLangBadge');
+
+    if (statusEl) {
+      statusEl.style.display = 'block';
+      statusEl.innerText = `इंटरनेट से '${targetLang.toUpperCase()}' पैक लागू हो रहा है...`;
+    }
+
+    localStorage.setItem('omni_system_language', targetLang);
+    if (badgeEl) badgeEl.innerText = targetLang.toUpperCase();
+    if (selector && selector.value !== targetLang) selector.value = targetLang;
+
+    await translateEntireDOMPure(targetLang);
+
+    if (statusEl) {
+      statusEl.innerText = `सफलता: '${targetLang.toUpperCase()}' पूरे सिस्टम पर लागू!`;
+      setTimeout(() => { statusEl.style.display = 'none'; }, 2400);
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    const savedLang = localStorage.getItem('omni_system_language') || 'hi';
+    const selector = document.getElementById('cloudLanguageSelector');
+    const badgeEl = document.getElementById('activeLangBadge');
+    if (selector) selector.value = savedLang;
+    if (badgeEl) badgeEl.innerText = savedLang.toUpperCase();
+    if (savedLang !== 'hi') {
+      setTimeout(() => downloadAndApplySystemLanguage(savedLang), 600);
+    }
+  });
+
+  // 🧠 स्मार्ट ज़ोन एक्सट्रैक्टर
+  function extractSmartZone(rawAddress) {
+    if (!rawAddress) return 'अन्य दिल्ली';
+    const lower = String(rawAddress).toLowerCase();
+
+    if (lower.includes('begumpur') || lower.includes('begum pur') || lower.includes('begam pur') || lower.includes('begam vihar')) return 'बेगमपुर';
+    if (lower.includes('rohini')) {
+      const secMatch = lower.match(/sector[\s\-]*(\d+)/i);
+      return secMatch ? `रोहिणी Sec-${secMatch[1]}` : 'रोहिणी';
+    }
+    if (lower.includes('pitampura') || lower.includes('pitam pura')) return 'पीतमपुरा';
+    if (lower.includes('rithala')) return 'रिठाला';
+    if (lower.includes('pooth') || lower.includes('puth')) return 'पूठ कलां';
+    if (lower.includes('sultanpuri') || lower.includes('sultan puri')) return 'सुल्तानपुरी';
+    if (lower.includes('mangolpuri') || lower.includes('mangol puri')) return 'मंगोलपुरी';
+    if (lower.includes('budh vihar')) return 'बुध विहार';
+    if (lower.includes('krishan vihar')) return 'कृष्ण विहार';
+    if (lower.includes('kanjhawala')) return 'कंझावला';
+    if (lower.includes('bawana')) return 'बवाना';
+    if (lower.includes('dwarka')) return 'द्वारका';
+    if (lower.includes('saket')) return 'साकेत';
+
+    const secGeneric = lower.match(/sector[\s\-]*(\d+)/i);
+    if (secGeneric) return `सेक्टर-${secGeneric[1]}`;
+
+    const parts = String(rawAddress).split(',').map(p => p.replace(/\b\d{6}\b/g, '').trim()).filter(p => p.length > 2);
+    if (parts.length >= 2) {
+      const candidate = parts[parts.length - 2];
+      return candidate.length > 14 ? candidate.substring(0, 14) : candidate;
+    }
+    return String(rawAddress).length > 14 ? String(rawAddress).substring(0, 14) : String(rawAddress);
+  }
+
+  function classifyMerchantStatus(m) {
+    const rawSt = String(m.status ?? 'approved').trim().toLowerCase();
+    const subSt = String(m.subscription_status ?? '').trim().toLowerCase();
+
+    if (['closed', 'false', 'expired', 'blocked', 'inactive', 'rejected'].includes(rawSt) || subSt === 'expired') {
+      return 'blocked';
+    }
+    if (['pending', 'wait', 'review', 'new'].includes(rawSt)) {
+      return 'pending';
+    }
+    return 'approved';
+  }
+
+  function getMerchantLiveRevenue(m) {
+    const baseRev = Number(m.revenue) || 0;
+    const masterRev = allRevenueData
+      .filter(r => String(r.merchant_id) === String(m.id) || (r.store_name && r.store_name === m.store_name))
+      .reduce((sum, r) => sum + (Number(r.total_revenue) || 0), 0);
+    return baseRev + masterRev;
+  }
+
+  function getMerchantLiveCustomers(m) {
+    const baseCust = Number(m.customers) || 0;
+    const claimCust = allClaimsData.filter(c => c.store_name === m.store_name).length;
+    return baseCust + claimCust;
+  }
+
+  // ⚡ मास्टर किल स्विच रियल-टाइम पोलिंग एवं लिसनर
+  async function checkMasterPortalAuthority() {
+    try {
+      const { data } = await supabaseClient.from('admin_master').select('staff_portal_active').eq('id', 1).single();
+      if (data && data.staff_portal_active === false) {
+        triggerAbsolute404Lockdown();
+      }
+    } catch (e) {}
+  }
+  setInterval(checkMasterPortalAuthority, 3000);
+
+  // ⚡ SUPABASE REALTIME DYNAMIC SYNC
+  function initRealtimeDynamicGraphs() {
+    try {
+      supabaseClient
+        .channel('omni_live_dynamic_sync')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_master' }, payload => {
+          if (payload.new && payload.new.staff_portal_active === false) triggerAbsolute404Lockdown();
+          else if (payload.new && payload.new.staff_portal_active === true) location.reload();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'merchants' }, () => loadAllData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'revenue_master' }, () => loadAllData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'user_claims' }, () => loadAllData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_team' }, () => loadAllData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_activity_logs' }, () => loadAllData())
+        .subscribe();
+    } catch(e) {}
+  }
+
+  function triggerAbsolute404Lockdown() {
+    try { localStorage.clear(); sessionStorage.clear(); } catch(err) {}
+    document.documentElement.innerHTML = `
+      <!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><title>404 Not Found</title>
+      <style>body{background:#030303;color:#FFF;font-family:monospace;display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;margin:0;}h1{font-size:90px;color:#DC2626;margin:0;font-weight:900;}p{color:#9CA3AF;font-size:15px;margin-top:10px;}</style>
+      </head><body><h1>404</h1><p>The requested resource was not found on this server.</p></body></html>
+    `;
+    throw new Error("404 Lockdown Active");
+  }
+
+  function showModal(msg, customBody = "", showDefaultClose = true) {
+    document.getElementById('customModalText').innerText = msg;
+    document.getElementById('customModalActionBody').innerHTML = customBody;
+    document.getElementById('customModalCloseBtn').style.display = showDefaultClose ? 'block' : 'none';
+    document.getElementById('customModalBox').classList.add('active');
+  }
+
+  function closeCustomModal() {
+    document.getElementById('customModalBox').classList.remove('active');
+    document.getElementById('customModalActionBody').innerHTML = '';
+  }
+
+  // 🔐 कीवर्ड पासवर्ड लॉगिन
+  async function handleLogin() {
+    const errEl = document.getElementById('loginErr');
+    const now = Date.now();
+
+    if (lockoutUntil > now) {
+      const waitSec = Math.ceil((lockoutUntil - now) / 1000);
+      errEl.innerText = `सुरक्षा लॉकडाउन! ${waitSec} सेकंड बाद प्रयास करें।`;
+      errEl.style.display = 'block';
+      return;
+    }
+
+    const name = document.getElementById('loginName').value.trim();
+    const keywordPass = document.getElementById('loginPin').value.trim();
+    if(!name || !keywordPass) {
+      errEl.innerText = "कृपया नाम और कीवर्ड पासवर्ड दोनों टाइप करें!";
+      errEl.style.display = 'block';
+      return;
+    }
+
+    document.getElementById('masterLoginBtn').innerText = "कीवर्ड वेरीफाई हो रहा है...";
+
+    try {
+      let isAuthSuccess = false;
+      let resolvedName = name;
+
+      const { data: rpcData, error: rpcErr } = await supabaseClient.rpc('secure_staff_login', { p_name: name, p_pin: keywordPass });
+      if (!rpcErr && rpcData && rpcData.success) {
+        isAuthSuccess = true;
+        resolvedName = rpcData.staff_name || name;
+      } else {
+        const { data: directMatch } = await supabaseClient
+          .from('staff_team')
+          .select('*')
+          .ilike('name', name)
+          .eq('pin', keywordPass)
+          .maybeSingle();
+
+        if (directMatch && directMatch.status !== 'Blocked') {
+          isAuthSuccess = true;
+          resolvedName = directMatch.name;
+        }
+      }
+
+      if (isAuthSuccess) {
+        failedLoginAttempts = 0;
+        localStorage.setItem('omni_failed_attempts', '0');
+        currentAdminName = resolvedName;
+        document.getElementById('authScreen').style.display = 'none';
+        document.getElementById('mainShell').classList.add('active');
+        await loadAllData();
+        initRealtimeDynamicGraphs();
+        startTimer();
+        await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: 'KEYWORD_VAULT_LOGIN', target_entity: 'SYSTEM' }]);
+      } else {
+        failedLoginAttempts++;
+        localStorage.setItem('omni_failed_attempts', String(failedLoginAttempts));
+        document.getElementById('masterLoginBtn').innerText = "वॉल्ट अनलॉक करें";
+
+        if (failedLoginAttempts >= 3) {
+          lockoutUntil = Date.now() + 60000;
+          localStorage.setItem('omni_lockout_until', String(lockoutUntil));
+          await supabaseClient.from('admin_core_db').insert([{ admin_name: name, action_taken: 'BRUTE_FORCE_BLOCKED', target_entity: 'AUTH_VAULT' }]);
+          errEl.innerText = "3 गलत कीवर्ड प्रयास! सिस्टम 60 सेकंड के लिए लॉक कर दिया गया है।";
+        } else {
+          errEl.innerText = `गलत कीवर्ड पासवर्ड! (${3 - failedLoginAttempts} प्रयास शेष)`;
+        }
+        errEl.style.display = 'block';
+      }
+    } catch(e) {
+      document.getElementById('masterLoginBtn').innerText = "वॉल्ट अनलॉक करें";
+      errEl.innerText = "नेटवर्क या सर्वर त्रुटि!";
+      errEl.style.display = 'block';
+    }
+  }
+
+  // सभी टेबल्स को समानांतर खींचकर सब-मिलीसेकंड O(1) इंडेक्स तैयार करना
+  async function loadAllData() {
+    try {
+      const [mRes, sRes, cRes, rRes, lRes, aRes, coreRes, qRes] = await Promise.all([
+        supabaseClient.from('merchants').select('*', { count: 'exact' }).range(0, 9999).order('created_at', { ascending: false }),
+        supabaseClient.from('staff_team').select('*', { count: 'exact' }).range(0, 9999),
+        supabaseClient.from('user_claims').select('*').range(0, 9999),
+        supabaseClient.from('revenue_master').select('*').range(0, 9999),
+        supabaseClient.from('staff_activity_logs').select('*').range(0, 9999).order('created_at', { ascending: false }),
+        supabaseClient.from('staff_attendance').select('*').range(0, 9999),
+        supabaseClient.from('admin_core_db').select('*').range(0, 9999).order('created_at', { ascending: false }),
+        supabaseClient.from('merchant_queries').select('*').range(0, 9999)
+      ]);
+      allMerchantsData = mRes.data || [];
+      allStaffData = sRes.data || [];
+      allClaimsData = cRes.data || [];
+      allRevenueData = rRes.data || [];
+      allStaffLogsData = lRes.data || [];
+      allAttendanceData = aRes.data || [];
+      allAdminCoreLogs = coreRes.data || [];
+      allQueriesData = qRes.data || [];
+
+      buildSubMillisecondChronoIndex();
+
+      const mBadge = document.getElementById('merchantTotalBadge');
+      if (mBadge) mBadge.innerText = `(${allMerchantsData.length})`;
+      const sBadge = document.getElementById('staffTotalBadge');
+      if (sBadge) sBadge.innerText = `(${allStaffData.length})`;
+
+      renderMerchantList(allMerchantsData);
+      renderStaffList(allStaffData);
+      executeAreaAudit();
+
+      const savedLang = localStorage.getItem('omni_system_language') || 'hi';
+      if (savedLang !== 'hi') translateEntireDOMPure(savedLang);
+    } catch(e) {}
+  }
+
+  function switchSection(sectionName, el) {
+    document.querySelectorAll('.sec-tab').forEach(t => t.classList.remove('active'));
+    if(el) el.classList.add('active');
+    document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+    document.getElementById(`pane-${sectionName}`).classList.add('active');
+
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const navBtn = document.getElementById(`navBtn-${sectionName}`);
+    if(navBtn) navBtn.classList.add('active');
+  }
+
+  function switchPaneNav(sec, el) {
+    const tabBtn = document.getElementById(`tabBtn-${sec}`);
+    switchSection(sec, tabBtn);
+  }
+
+  function renderMerchantList(dataArray) {
+    const container = document.getElementById('merchantDirectoryContainer');
+    if(!dataArray || dataArray.length === 0) {
+      container.innerHTML = '<div style="font-size:11px; color:#9CA3AF; text-align:center; padding:12px;">डेटाबेस में कोई मर्चेंट मौजूद नहीं है (0)।</div>';
+      return;
+    }
+    container.innerHTML = dataArray.map((m, idx) => {
+      const cat = classifyMerchantStatus(m);
+      const isApproved = cat === 'approved';
+      const isBlocked = cat === 'blocked';
+      const liveRev = getMerchantLiveRevenue(m);
+      const liveCust = getMerchantLiveCustomers(m);
+      const zoneTag = extractSmartZone(m.address || m.location || '');
+
+      return `
+        <div class="item-row">
+          <div style="flex:1;">
+            <div style="font-weight:800; color:#F3F4F6; font-size:13px;">
+              <span style="color:#6B7280; font-size:11px; margin-right:4px;">#${idx + 1}</span>${m.store_name || 'अनाम स्टोर'}
+              <span class="clean-zone-label">• ${zoneTag}</span>
+            </div>
+            <div style="font-size:10px; color:#9CA3AF; margin-top:4px; line-height:1.4;">${m.address || m.location || 'N/A'} | ${m.phone || 'N/A'}</div>
+            <div style="font-size:11px; color:#D1D5DB; font-weight:700; margin-top:5px;">
+              रेवेन्यू: <span style="color:#10B981;">₹${liveRev.toLocaleString('en-IN')}</span> &nbsp;|&nbsp; ग्राहक: <span style="color:#F3F4F6;">${liveCust}</span>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+            <span class="clean-status ${cat}">${m.status || 'approved'}</span>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <button class="clean-action-btn gold-highlight" onclick="openUpdateRevenueModal('${m.id}', '${(m.store_name || '').replace(/'/g, '')}', ${Number(m.revenue || 0)})">₹ रेवेन्यू</button>
+              ${!isApproved ? `<button class="clean-action-btn green-highlight" onclick="updateMerchantStatus('${m.id}', 'approved')">अप्रूव</button>` : ''}
+              <button class="clean-action-btn ${isBlocked ? 'green-highlight' : 'red-muted'}" onclick="updateMerchantStatus('${m.id}', '${isBlocked ? 'approved' : 'closed'}')">${isBlocked ? 'अनब्लॉक' : 'ब्लॉक'}</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function openUpdateRevenueModal(merchantId, storeName, currentRev) {
+    const html = `
+      <div style="text-align:left; margin-top:8px;">
+        <div style="font-size:11px; color:#9CA3AF; margin-bottom:6px;">स्टोर: <b style="color:#FFF;">${storeName}</b></div>
+        <input type="number" id="customRevInput" value="${currentRev}" placeholder="कुल रेवेन्यू राशि (₹) दर्ज करें" style="width:100%; padding:10px; background:#000; color:#10B981; border:1px solid #D4AF37; border-radius:8px; font-size:14px; font-weight:800; text-align:center; outline:none;">
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button class="btn-primary" style="background:#374151; margin-top:0;" onclick="closeCustomModal()">रद्द करें</button>
+          <button class="btn-primary" style="margin-top:0; background:#059669;" onclick="saveMerchantRevenue('${merchantId}', '${storeName}')">अपडेट करें</button>
+        </div>
+      </div>
+    `;
+    showModal("लाइव बिजनेस रेवेन्यू अपडेट", html, false);
+  }
+
+  async function saveMerchantRevenue(merchantId, storeName) {
+    const val = Number(document.getElementById('customRevInput').value) || 0;
+    const { error } = await supabaseClient.from('merchants').update({ revenue: val }).eq('id', merchantId);
+    if (!error) {
+      await supabaseClient.from('revenue_master').insert([{ merchant_id: String(merchantId), store_name: storeName, total_revenue: 0, month_period: new Date().toLocaleDateString('hi-IN') }]);
+      showModal(`'${storeName}' का रेवेन्यू ₹${val.toLocaleString('en-IN')} अपडेट हो गया है। ग्राफ सिंक हो चुका है!`);
+      await loadAllData();
+    } else {
+      showModal("त्रुटि: " + error.message);
+    }
+  }
+
+  async function updateMerchantStatus(id, newStatus) {
+    const { error } = await supabaseClient.from('merchants').update({ status: newStatus }).eq('id', id);
+    if(!error) {
+      await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: `MERCHANT_${newStatus.toUpperCase()}`, target_entity: String(id) }]);
+      showModal(`मर्चेंट स्टेटस '${newStatus}' अपडेट हो गया है।`);
+      loadAllData();
+    } else {
+      showModal("त्रुटि: " + error.message);
+    }
+  }
+
+  // 👤 स्टाफ लिस्ट: किसी भी स्टाफ पर क्लिक करते ही <1ms में फुल-स्क्रीन परफॉर्मेंस पेज खुलेगा
+  function renderStaffList(dataArray) {
+    const container = document.getElementById('staffDirectoryContainer');
+    if(!dataArray || dataArray.length === 0) {
+      container.innerHTML = '<div style="font-size:11px; color:#9CA3AF; text-align:center; padding:12px;">डेटाबेस में कोई स्टाफ मौजूद नहीं है (0)।</div>';
+      return;
+    }
+    container.innerHTML = dataArray.map(s => {
+      let isBlocked = s.status === 'Blocked';
+      const safeName = (s.name || 'Staff').replace(/'/g, '');
+      const bucket = staffChronoIndex[safeName.trim().toLowerCase()];
+      const evCount = bucket ? bucket.events.length : 0;
+
+      return `
+        <div class="item-row clickable-staff" style="cursor:pointer;" onclick="openStaffDossierPage('${safeName}')">
+          <div style="flex:1;">
+            <div style="font-weight:800; color:#F3F4F6; font-size:13px;">
+              ${s.name} <span class="clean-zone-label">• ${evCount} रिकॉर्ड्स ↗</span>
+            </div>
+            <div style="font-size:11px; color:#9CA3AF; margin-top:4px;">
+              कीवर्ड: <span style="color:#E5E7EB; font-weight:700;">${s.pin}</span> &nbsp;|&nbsp;
+              स्टेटस: <span class="clean-status ${isBlocked?'blocked':'approved'}">${s.status || 'Active'}</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:12px; align-items:center;" onclick="event.stopPropagation();">
+            <button class="clean-action-btn gold-highlight" onclick="openCustomStaffPinModal('${s.id}', '${safeName}')">कीवर्ड बदलें</button>
+            <button class="clean-action-btn ${isBlocked?'green-highlight':'red-muted'}" onclick="toggleStaffStatus('${s.id}', '${s.status}', '${safeName}')">${isBlocked?'अनब्लॉक':'ब्लॉक'}</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function fetchStaffMembers() {
+    await loadAllData();
+  }
+
+  async function toggleStaffStatus(id, currentStatus, staffName) {
+    const newStatus = currentStatus === 'Blocked' ? 'Active' : 'Blocked';
+    const { error } = await supabaseClient.from('staff_team').update({ status: newStatus }).eq('id', id);
+    if(!error) {
+      await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: `STAFF_${newStatus.toUpperCase()}`, target_entity: staffName }]);
+      showModal(`स्टाफ '${staffName}' का स्टेटस '${newStatus}' कर दिया गया है।`);
+      fetchStaffMembers();
+    }
+  }
+
+  function openCustomStaffPinModal(id, name) {
+    const html = `
+      <div style="text-align:left; margin-top:8px;">
+        <div class="input-wrapper">
+          <input type="password" id="customNewPinInput" placeholder="नया कीवर्ड पासवर्ड टाइप करें" style="width:100%; padding:10px 40px 10px 10px; background:#000; color:#FFF; border:1px solid #D4AF37; border-radius:8px; font-size:12px; outline:none;">
+          <button type="button" class="eye-icon-btn" style="right:8px;" onclick="toggleInputEye('customNewPinInput', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="url(#metalGold3D)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px; height:18px;">
+              ${CLOSED_EYE_SVG}
+            </svg>
+          </button>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button class="btn-primary" style="background:#374151; margin-top:0;" onclick="closeCustomModal()">रद्द करें</button>
+          <button class="btn-primary" style="margin-top:0;" onclick="saveCustomStaffPin('${id}', '${name}')">कीवर्ड सेव करें</button>
+        </div>
+      </div>
+    `;
+    showModal(`स्टाफ '${name}' का कीवर्ड पासवर्ड बदलें`, html, false);
+  }
+
+  async function saveCustomStaffPin(id, name) {
+    const newKeyword = document.getElementById('customNewPinInput').value.trim();
+    if(newKeyword.length < 4) {
+      showModal("सुरक्षा नियम: कीवर्ड पासवर्ड कम से कम 4 अक्षरों/शब्दों का होना चाहिए।");
+      return;
+    }
+    const { error } = await supabaseClient.from('staff_team').update({ pin: newKeyword }).eq('id', id);
+    if(!error) {
+      await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: 'STAFF_KEYWORD_CHANGED', target_entity: name }]);
+      showModal(`स्टाफ '${name}' का नया कीवर्ड पासवर्ड डेटाबेस में सेव हो गया है।`);
+      fetchStaffMembers();
+    } else {
+      showModal("त्रुटि: कीवर्ड अपडेट नहीं हो सका।");
+    }
+  }
+
+  async function addNewStaffToDb() {
+    const name = document.getElementById('newStaffName').value.trim();
+    const keywordPass = document.getElementById('newStaffPin').value.trim();
+    if(!name || keywordPass.length < 4) {
+      showModal("कृपया स्टाफ का नाम और मजबूत कीवर्ड पासवर्ड (कम से कम 4 अक्षर) दर्ज करें।");
+      return;
+    }
+    const { error } = await supabaseClient.from('staff_team').insert([{ name: name, pin: keywordPass, status: 'Active' }]);
+    if(!error) {
+      await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: 'NEW_STAFF_ADDED', target_entity: name }]);
+      document.getElementById('newStaffName').value = '';
+      document.getElementById('newStaffPin').value = '';
+      toggleBurger();
+      showModal(`नया स्टाफ '${name}' कीवर्ड पासवर्ड के साथ Supabase में जुड़ चुका है।`);
+      fetchStaffMembers();
+    } else {
+      showModal("त्रुटि: " + error.message);
+    }
+  }
+
+  async function autoApproveAllPendingMerchants() {
+    try {
+      const { error } = await supabaseClient.from('merchants').update({ status: 'approved' }).in('status', ['pending', 'false', 'closed']);
+      if (!error) {
+        await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: 'BULK_AUTO_APPROVE', target_entity: 'ALL_PENDING_MERCHANTS' }]);
+        toggleBurger();
+        showModal("सभी पेंडिंग दुकानों को एक साथ ऑटो-अप्रूव (लाइव) कर दिया गया है।");
+        loadAllData();
+      } else {
+        showModal("त्रुटि: ऑटो-अप्रूव विफल।");
+      }
+    } catch(e) {
+      showModal("त्रुटि: सर्वर कनेक्शन फेल।");
+    }
+  }
+
+  function openBulkMessageModal() {
+    toggleBurger();
+    const bodyHtml = `
+      <div style="margin-top:8px; text-align:left;">
+        <input type="text" id="bulkMsgTitle" placeholder="ब्रॉडकास्ट शीर्षक (Title)" style="width:100%; padding:8px; background:#000; color:#FFF; border:1px solid #333; border-radius:6px; font-size:11px; margin-bottom:8px; outline:none;">
+        <textarea id="bulkMsgText" rows="4" style="width:100%; padding:8px; background:#000; color:#FFF; border:1px solid #333; border-radius:6px; font-size:11px; outline:none;" placeholder="सभी मर्चेंट्स के लिए संदेश लिखें..."></textarea>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button class="btn-primary" style="background:#374151; margin-top:0;" onclick="closeCustomModal()">रद्द करें</button>
+          <button class="btn-primary" style="margin-top:0; background:#2563EB;" onclick="executeBulkWhatsAppBroadcast()">लॉग एवं WhatsApp भेजें</button>
+        </div>
+      </div>
+    `;
+    showModal("बल्क ब्रॉडकास्ट कमांड सेंटर", bodyHtml, false);
+  }
+
+  async function executeBulkWhatsAppBroadcast() {
+    const title = document.getElementById('bulkMsgTitle').value.trim() || "मास्टर अनाउंसमेंट";
+    const msg = document.getElementById('bulkMsgText').value.trim();
+    if (!msg) {
+      showModal("कृपया ब्रॉडकास्ट मैसेज टाइप करें।");
+      return;
+    }
+
+    let count = 0;
+    allMerchantsData.forEach(m => {
+      if (m.phone) {
+        let phoneClean = m.phone.replace(/[^0-9]/g, '');
+        if (phoneClean.length >= 10) {
+          count++;
+          setTimeout(() => {
+            window.open(`https://wa.me/91${phoneClean}?text=${encodeURIComponent("*" + title + "*\n\n" + msg)}`, '_blank');
+          }, count * 700);
+        }
+      }
+    });
+
+    await supabaseClient.from('broadcast_center').insert([{ broadcast_title: title, message_content: msg, target_segment: 'ALL_MERCHANTS', sent_count: count }]);
+    showModal(`ब्रॉडकास्ट डेटाबेस में सेव हो गया है और ${count} मर्चेंट्स के लिए ट्रिगर कर दिया गया है।`);
+  }
+
+  // 🎯 एरिया-वाइज लाइव ऑडिट
+  function executeAreaAudit() {
+    const rawArea = document.getElementById('areaAuditInput').value.trim();
+    const areaQuery = rawArea.toLowerCase();
+    const statsBox = document.getElementById('areaAuditStats');
+
+    const filteredMerchants = areaQuery
+      ? allMerchantsData.filter(m => {
+          let addr = (m.address || m.location || '').toLowerCase();
+          let name = (m.store_name || '').toLowerCase();
+          let smartZ = extractSmartZone(m.address || m.location || '').toLowerCase();
+          return addr.includes(areaQuery) || name.includes(areaQuery) || smartZ.includes(areaQuery);
+        })
+      : allMerchantsData;
+
+    let totalRevenue = 0;
+    let blockedCount = 0;
+    let approvedCount = 0;
+    let pendingCount = 0;
+    let totalCustomers = 0;
+
+    filteredMerchants.forEach(m => {
+      totalRevenue += getMerchantLiveRevenue(m);
+      totalCustomers += getMerchantLiveCustomers(m);
+
+      const cat = classifyMerchantStatus(m);
+      if (cat === 'blocked') blockedCount++;
+      else if (cat === 'pending') pendingCount++;
+      else approvedCount++;
+    });
+
+    const displayZone = rawArea ? rawArea.toUpperCase() : "संपूर्ण डेटाबेस (ALL ZONES)";
+    statsBox.innerHTML = `
+      <div style="background:#000; padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); line-height:1.65;">
+        <div style="color:#D4AF37; font-weight:900;">ऑडिट ज़ोन: ${displayZone}</div>
+        <div>कुल रेवेन्यू: <b style="color:#10B981;">₹${totalRevenue.toLocaleString('en-IN')}</b> &nbsp;|&nbsp; कुल मर्चेंट्स: <b style="color:#FFF;">${filteredMerchants.length}</b></div>
+        <div>कुल ग्राहक फुटफॉल/क्लेम: <b style="color:#60A5FA;">${totalCustomers}</b></div>
+        <div>अप्रूव्ड (Live): <b style="color:#10B981;">${approvedCount}</b> &nbsp;|&nbsp; पेंडिंग: <b style="color:#F59E0B;">${pendingCount}</b> &nbsp;|&nbsp; ब्लॉक/एक्सपायर्ड: <b style="color:#EF4444;">${blockedCount}</b></div>
+      </div>
+    `;
+
+    renderAllCompactGraphs(filteredMerchants);
+  }
+
+  const exactValueTopLabelPlugin = {
+    id: 'exactValueTopLabelPlugin',
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      ctx.save();
+      chart.data.datasets.forEach((dataset, i) => {
+        const meta = chart.getDatasetMeta(i);
+        if (!meta.hidden) {
+          meta.data.forEach((element, index) => {
+            const val = dataset.data[index];
+            if (val !== undefined && val !== null) {
+              ctx.fillStyle = '#FCF6BA';
+              ctx.font = '800 10px sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'bottom';
+              const displayStr = dataset.yAxisID === 'y' && dataset.label && dataset.label.includes('₹')
+                ? (val > 0 ? '₹' + val.toLocaleString('en-IN') : '')
+                : String(val);
+              if (displayStr) {
+                ctx.fillText(displayStr, element.x, element.y - 4);
+              }
+            }
+          });
+        }
+      });
+      ctx.restore();
+    }
+  };
+
+  function renderAllCompactGraphs(dataToUse) {
+    const list = dataToUse || [];
+    let zoneGroups = {};
+    let grandTotalRev = 0;
+
+    list.forEach(m => {
+      const z = extractSmartZone(m.address || m.location || '');
+      if (!zoneGroups[z]) {
+        zoneGroups[z] = { count: 0, revenue: 0, customers: 0, stores: [] };
+      }
+      const rev = getMerchantLiveRevenue(m);
+      const cust = getMerchantLiveCustomers(m);
+
+      zoneGroups[z].count += 1;
+      zoneGroups[z].revenue += rev;
+      zoneGroups[z].customers += cust;
+      zoneGroups[z].stores.push(m);
+      grandTotalRev += rev;
+    });
+
+    const sortedZones = Object.keys(zoneGroups).sort((a, b) => zoneGroups[b].count - zoneGroups[a].count);
+    const merchantVals = sortedZones.map(z => zoneGroups[z].count);
+    const revenueVals = sortedZones.map(z => zoneGroups[z].revenue);
+    const customerVals = sortedZones.map(z => zoneGroups[z].customers);
+
+    document.getElementById('graph1TotalBadge').innerText = `${list.length} स्टोर (${sortedZones.length} ज़ोन)`;
+    document.getElementById('graph2TotalBadge').innerText = `₹${grandTotalRev.toLocaleString('en-IN')}`;
+
+    if (globalCharts.c1) globalCharts.c1.destroy();
+    if (globalCharts.c2) globalCharts.c2.destroy();
+
+    // ग्राफ 1: बिल्कुल अपरिवर्तित (Unchanged Doughnut)
+    const ctx1 = document.getElementById('chartMerchantSearch').getContext('2d');
+    globalCharts.c1 = new Chart(ctx1, {
+      type: 'doughnut',
+      data: {
+        labels: sortedZones.length > 0 ? sortedZones : ['0 रिकॉर्ड'],
+        datasets: [{
+          data: merchantVals.length > 0 ? merchantVals : [0],
+          backgroundColor: ['#D4AF37', '#34D399', '#60A5FA', '#F87171', '#A78BFA', '#FBBF24', '#EC4899', '#14B8A6'],
+          borderWidth: 1.5,
+          borderColor: '#050505'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        onClick: (evt, elements) => {
+          if (elements.length > 0 && sortedZones.length > 0) {
+            const idx = elements[0].index;
+            const selectedZone = sortedZones[idx];
+            showZoneDrillDownModal(selectedZone, zoneGroups[selectedZone].stores);
+          }
+        },
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+              boxWidth: 10,
+              font: { size: 10, weight: 'bold' },
+              color: '#E5E7EB',
+              generateLabels: (chart) => {
+                const data = chart.data;
+                return data.labels.map((label, i) => ({
+                  text: `${label}: ${data.datasets[0].data[i]}`,
+                  fillStyle: data.datasets[0].backgroundColor[i % 8],
+                  fontColor: '#E5E7EB',
+                  index: i
+                }));
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // ग्राफ 2: बिल्कुल अपरिवर्तित (Unchanged Revenue & Footfall Bar)
+    const ctx2 = document.getElementById('chartBusinessRevenue').getContext('2d');
+    globalCharts.c2 = new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: sortedZones.length > 0 ? sortedZones : ['0 रिकॉर्ड'],
+        datasets: [
+          {
+            label: 'रेवेन्यू (₹)',
+            data: revenueVals.length > 0 ? revenueVals : [0],
+            backgroundColor: '#10B981',
+            borderRadius: 4,
+            yAxisID: 'y'
+          },
+          {
+            label: 'ग्राहक फुटफॉल',
+            data: customerVals.length > 0 ? customerVals : [0],
+            backgroundColor: '#D4AF37',
+            borderRadius: 4,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      plugins: [exactValueTopLabelPlugin],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 16 } },
+        onClick: (evt, elements) => {
+          if (elements.length > 0 && sortedZones.length > 0) {
+            const idx = elements[0].index;
+            const selectedZone = sortedZones[idx];
+            showZoneDrillDownModal(selectedZone, zoneGroups[selectedZone].stores);
+          }
+        },
+        plugins: {
+          legend: { display: true, labels: { boxWidth: 8, font: { size: 9 }, color: '#E5E7EB' } }
+        },
+        scales: {
+          y: {
+            type: 'linear',
+            position: 'left',
+            beginAtZero: true,
+            suggestedMax: grandTotalRev === 0 ? 1000 : grandTotalRev * 1.2,
+            ticks: {
+              font: { size: 8 },
+              color: '#10B981',
+              callback: (val) => '₹' + val.toLocaleString('en-IN')
+            }
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            beginAtZero: true,
+            suggestedMax: 10,
+            grid: { drawOnChartArea: false },
+            ticks: { precision: 0, font: { size: 8 }, color: '#D4AF37' }
+          },
+          x: { ticks: { font: { size: 9, weight: 'bold' }, color: '#D1D5DB' } }
+        }
+      }
+    });
+
+    // ग्राफ 3: नया फ्लोटिंग ट्रेडिंग वेक्टर एरो ग्राफ अपडेट करें
+    updateTradingGraph3();
+  }
+
+  function showZoneDrillDownModal(zoneName, stores) {
+    const rows = stores.map((s, i) => `
+      <div style="background:#121215; border-bottom:1px solid rgba(255,255,255,0.08); padding:8px; border-radius:6px; margin-bottom:6px; text-align:left; font-size:11px;">
+        <div style="font-weight:800; color:#F3F4F6;">#${i + 1} ${s.store_name || 'स्टोर'} <span style="color:#10B981; float:right;">₹${getMerchantLiveRevenue(s)}</span></div>
+        <div style="color:#9CA3AF; font-size:9px; margin-top:2px;">${s.address || 'N/A'} | 📞 ${s.phone || 'N/A'}</div>
+      </div>
+    `).join('');
+    showModal(`ज़ोन ऑडिट: ${zoneName} (${stores.length} दुकानें)`, `<div style="max-height:220px; overflow-y:auto; margin-top:8px;">${rows}</div>`);
+  }
+
+  // 🔍 ग्लोबल सर्च + सब-मिलीसेकंड परफॉर्मेंस कमांड (जैसे "8 + 8 year", "10 + 10 year", या स्टाफ नाम)
+  async function executeCapsuleOmniSearch() {
+    const t0 = performance.now();
+    const raw = document.getElementById('capsuleSearchInput').value.trim();
+    const query = raw.toLowerCase();
+    const resultsBox = document.getElementById('capsuleSearchResults');
+    if(!query) { resultsBox.innerHTML = ''; return; }
+
+    if (query.includes('calc') || query.includes('कैलकुलेटर') || query.includes('केलकुलेटर') || query.includes('हिसाब')) {
+      document.getElementById('capsuleSearchInput').value = '';
+      resultsBox.innerHTML = '';
+      openLiveCalculator();
+      return;
+    }
+
+    // यदि "8 + 8 year", "10 + 10 year", "performance", "परफॉर्मेंस" पूछा गया है तो <1ms में सीधा रिजल्ट दें
+    const timeCmd = parseNaturalTimeCommand(raw);
+    if (timeCmd && (query.includes('year') || query.includes('month') || query.includes('day') || query.includes('साल') || query.includes('महीना') || query.includes('दिन') || query.includes('परफॉर्मेंस') || query.includes('performance'))) {
+      if (timeCmd.matchedStaff) {
+        openStaffDossierPage(timeCmd.matchedStaff);
+        if (timeCmd.ms !== null) {
+          document.getElementById('dossierCustomTimeInput').value = raw;
+          executeDossierCustomTimeQuery(raw);
+        }
+        return;
+      } else {
+        const evs = filterEventsByWindow(portalChronoStream, 'all', timeCmd.ms);
+        let pos = 0, neg = 0;
+        evs.forEach(e => { if (e.type === 'negative') neg++; else pos++; });
+        const g = evaluatePerformanceGrade(pos, neg, evs.length, pos - neg);
+        document.getElementById('graph3CommandInput').value = raw;
+        handleGraph3CommandInput(raw);
+        const dt = (performance.now() - t0).toFixed(2);
+        resultsBox.innerHTML = `
+          <div class="card" style="padding:10px; margin-bottom:4px; border-color:${g.color};">
+            <div style="display:flex; justify-content:space-between; font-weight:900; color:#D4AF37;">
+              <span>⚡ ${timeCmd.label} पोर्टल परफॉर्मेंस (${dt} ms)</span>
+              <span style="cursor:pointer; color:#F87171;" onclick="document.getElementById('capsuleSearchResults').innerHTML=''">✕</span>
+            </div>
+            <div style="margin-top:4px;">ग्रेड: <b style="color:${g.color}; font-size:13px;">${g.grade} (${g.arrow})</b></div>
+            <div style="color:#D1D5DB; margin-top:2px;">कुल रिकॉर्ड्स: <b>${evs.length}</b> | पॉजिटिव: <b style="color:#10B981;">${pos}</b> | अलर्ट/ब्लॉक: <b style="color:#EF4444;">${neg}</b></div>
+          </div>`;
+        return;
+      }
+    }
+
+    if (/^[0-9+\-*/().\s%]+$/.test(query) && /[+\-*/%]/.test(query)) {
+      const calcRes = safeEvaluateMath(query);
+      openLiveCalculator(query.replace(/\s+/g, ''));
+      resultsBox.innerHTML = `<div class="card" style="padding:10px; border-color:#D4AF37; margin-bottom:4px;"><span style="color:#9CA3AF;">गणना परिणाम:</span> <b style="color:#FCF6BA; font-size:14px;">${calcRes.toLocaleString('en-IN')}</b></div>`;
+      return;
+    }
+
+    // इन-मेमोरी सब-मिलीसेकंड डेटा सर्च
+    let matchesHtml = '';
+    let matchCount = 0;
+
+    allStaffData.forEach(s => {
+      if (JSON.stringify(s).toLowerCase().includes(query)) {
+        matchCount++;
+        const safeName = (s.name || 'Staff').replace(/'/g, '');
+        matchesHtml += `<div style="color:#FCF6BA; margin-top:4px; cursor:pointer;" onclick="openStaffDossierPage('${safeName}')">• [स्टाफ] <b>${s.name}</b> — स्टेटस: ${s.status} <span style="color:#D4AF37;">(पूरी कुंडली खोलें ↗)</span></div>`;
+      }
+    });
+
+    allMerchantsData.forEach(m => {
+      if (JSON.stringify(m).toLowerCase().includes(query)) {
+        matchCount++;
+        matchesHtml += `<div style="color:#10B981; margin-top:3px;">• [मर्चेंट] <b>${m.store_name || 'स्टोर'}</b> — ${extractSmartZone(m.address || '')} (${m.status || 'Active'}) | ₹${getMerchantLiveRevenue(m)}</div>`;
+      }
+    });
+
+    allQueriesData.forEach(q => {
+      if (JSON.stringify(q).toLowerCase().includes(query)) {
+        matchCount++;
+        matchesHtml += `<div style="color:#60A5FA; margin-top:3px;">• [क्वेरी] <b>${q.merchant_name}</b>: ${q.query_text}</div>`;
+      }
+    });
+
+    const elapsed = (performance.now() - t0).toFixed(2);
+    if (matchCount > 0) {
+      resultsBox.innerHTML = `
+        <div class="card" style="padding:10px; margin-bottom:4px;">
+          <div style="display:flex; justify-content:space-between; font-weight:900; color:#D4AF37; margin-bottom:4px;">
+            <span>"${raw}" के परिणाम (${matchCount}) — ⚡ ${elapsed} ms</span>
+            <span style="cursor:pointer; color:#F87171;" onclick="document.getElementById('capsuleSearchResults').innerHTML=''">बंद करें</span>
+          </div>
+          ${matchesHtml}
+        </div>`;
+    } else {
+      resultsBox.innerHTML = `<div class="card" style="padding:8px; color:#F87171; text-align:center; margin-bottom:4px;">डेटाबेस में "${raw}" से जुड़ा कोई रिकॉर्ड नहीं मिला (0)।</div>`;
+    }
+  }
+
+  function toggleBurger() {
+    document.getElementById('burgerDrawer').classList.toggle('active');
+    document.getElementById('drawerOverlay').classList.toggle('active');
+  }
+
+  async function setPortalState(active) {
+    const { error } = await supabaseClient.from('admin_master').upsert([{ id: 1, staff_portal_active: active, updated_at: new Date().toISOString() }]);
+    if(!error) {
+      await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: active ? 'PORTAL_UNLOCKED' : 'PORTAL_404_LOCKDOWN', target_entity: 'ALL_SESSIONS' }]);
+      toggleBurger();
+      if(active) {
+        showModal("प्रूफ वेरीफाइड: admin_master टेबल में staff_portal_active = TRUE सेट हो चुका है। पोर्टल लाइव है।");
+      } else {
+        showModal("प्रूफ वेरीफाइड: 404 लॉकडाउन सिग्नल डेटाबेस में भेज दिया गया है। 3 सेकंड में स्क्रीन क्रैश हो जाएगी।");
+      }
+    } else {
+      showModal("त्रुटि: " + error.message);
+    }
+  }
+
+  function startTimer() {
+    let s = 0;
+    setInterval(() => {
+      s++;
+      let m = Math.floor(s/60).toString().padStart(2,'0');
+      let sec = (s%60).toString().padStart(2,'0');
+      document.getElementById('timerDisplay').innerText = `${m}:${sec}`;
+    }, 1000);
+  }
+</script>
+</body>
+</html>
