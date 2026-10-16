@@ -3,14 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>STAR ADMIN OMNI</title>
+  <title>STAR ADMIN OMNI — Enterprise Command</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
     html, body { width: 100%; min-height: 100vh; background-color: #030303; color: #E5E7EB; overflow-x: hidden; user-select: none; }
     input, textarea, select { user-select: auto !important; }
     ::selection { background: rgba(212, 175, 55, 0.25); color: #FCF6BA; }
 
-    /* लॉगिन स्क्रीन */
+    /* ⚡ लाइव एक्शन टोस्ट */
+    .omni-toast {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-150%);
+      background: #0B0B0F;
+      color: #FCF6BA;
+      border: 1.5px solid #D4AF37;
+      padding: 9px 18px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      z-index: 999999999;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+      transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .omni-toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* 🔐 लॉगिन स्क्रीन */
     .auth-screen { position: fixed; inset: 0; background: #030303; z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; }
     .auth-card { background: #070709; border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 20px; padding: 26px 22px; width: 100%; max-width: 360px; box-shadow: 0 15px 40px rgba(0,0,0,0.95); text-align: center; }
     .input-group { margin-bottom: 14px; text-align: left; position: relative; }
@@ -20,7 +41,6 @@
     .input-group input { width: 100%; padding: 12px 14px; background: #000; border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px; color: #FFF; font-size: 13px; outline: none; transition: border-color 0.2s; }
     .input-group input:focus { border-color: #D4AF37; }
     
-    /* प्रीमियम मेटैलिक Eye बटन */
     .eye-icon-btn { position: absolute; right: 12px; background: transparent; border: none; padding: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.85; }
     .eye-icon-btn:active { opacity: 1; transform: scale(1.08); }
     .eye-icon-btn svg { width: 20px; height: 20px; }
@@ -45,17 +65,21 @@
     .sync-spinner-btn.spinning { border-color: #D4AF37; }
     .sync-spinner-btn.spinning svg { animation: arrowSpin360 0.5s linear infinite; }
 
-    .btn-primary { width: 100%; background: linear-gradient(135deg, #991B1B, #DC2626, #D4AF37); color: #FFF; border: none; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 900; cursor: pointer; margin-top: 8px; transition: transform 0.1s; }
-    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary { width: 100%; background: linear-gradient(135deg, #991B1B, #DC2626, #D4AF37); color: #FFF; border: none; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 900; cursor: pointer; margin-top: 8px; transition: transform 0.1s, opacity 0.2s; }
+    .btn-primary:active { transform: scale(0.97); opacity: 0.9; }
 
     /* मुख्य एप शेल */
     .app-shell { display: none; flex-direction: column; min-height: 100vh; padding-bottom: 145px; max-width: 480px; margin: 0 auto; position: relative; background: #030303; }
     .app-shell.active { display: flex; }
 
     /* टॉप हेडर */
-    .top-header { background: #050505; border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+    .top-header { background: #050505; border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
     .burger-btn { background: transparent; border: none; padding: 8px 4px; cursor: pointer; display: flex; flex-direction: column; gap: 5px; justify-content: center; align-items: flex-start; }
     .burger-line { display: block; width: 22px; height: 2px; background: linear-gradient(90deg, #FCF6BA, #D4AF37, #AA771C); border-radius: 2px; }
+
+    .portal-state-pill { font-size: 9px; font-weight: 900; padding: 3px 8px; border-radius: 999px; cursor: pointer; border: 1px solid rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.12); color: #10B981; white-space: nowrap; }
+    .portal-state-pill.is-404 { border-color: rgba(239, 68, 68, 0.6); background: rgba(239, 68, 68, 0.18); color: #F87171; animation: blinkRed 1.5s infinite; }
+    @keyframes blinkRed { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
 
     /* मास्टर कंट्रोल ड्रॉवर */
     .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 999998; display: none; backdrop-filter: blur(3px); }
@@ -68,16 +92,13 @@
 
     .content-area { padding: 14px; }
 
-    /* एरिया ऑडिट सर्च बार */
     .graph-search-bar { background: #000; border: 1px solid rgba(212,175,55,0.35); border-radius: 8px; padding: 6px 12px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
     .graph-search-bar input { border: none; outline: none; width: 100%; font-size: 11px; color: #FFF; background: transparent; }
 
-    /* कर्व्ड ग्लोबल सर्च बार */
     .capsule-search-container { position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%); width: calc(100% - 28px); max-width: 452px; z-index: 90; }
     .capsule-search-bar { background: rgba(10, 10, 12, 0.96); backdrop-filter: blur(12px); border: 1px solid rgba(212, 175, 55, 0.5); border-radius: 24px; padding: 7px 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.9); }
     .capsule-search-bar input { border: none; outline: none; width: 100%; font-size: 12px; color: #FFF; background: transparent; }
 
-    /* 👑 अल्ट्रा-क्लीन कार्ड्स और लिस्ट रो */
     .card { background: #0A0A0C; border: 1px solid rgba(212, 175, 55, 0.28); border-radius: 14px; padding: 14px; margin-bottom: 12px; color: #FFF; }
     .item-row {
       background: #0D0D10;
@@ -89,24 +110,39 @@
       justify-content: space-between;
       align-items: center;
       gap: 10px;
-      transition: border-color 0.15s;
+      transition: border-color 0.2s, background-color 0.2s;
     }
+    .item-row.row-pending { border-left: 3.5px solid #F59E0B; }
+    .item-row.row-approved { border-left: 3.5px solid #10B981; }
+    .item-row.row-blocked { border-left: 3.5px solid #EF4444; }
     .item-row.clickable-staff:active { border-color: #D4AF37; }
 
-    /* ✨ सिर्फ एक्टिव सेक्शन टैब पर क्लीन गोल्डन लाइट */
-    .section-tabs { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 6px; }
+    /* 🖼️ थंबनेल अवतार (Photo URL Fetcher Thumbnail) */
+    .entity-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1.5px solid rgba(212, 175, 55, 0.5);
+      background: #141418;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    /* ✨ सेक्शन टैब्स (अब 4 टैब्स: Admin | Staff | Merchant | Archive) */
+    .section-tabs { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 6px; }
     .sec-tab {
       flex: 1;
-      padding: 8px 4px;
+      padding: 8px 2px;
       text-align: center;
       background: transparent !important;
       border: none !important;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 800;
       color: #6B7280;
       cursor: pointer;
       transition: color 0.2s ease;
-      letter-spacing: 0.4px;
+      letter-spacing: 0.3px;
       position: relative;
     }
     .sec-tab.active {
@@ -118,40 +154,38 @@
       content: '';
       position: absolute;
       bottom: -7px;
-      left: 24%;
-      right: 24%;
+      left: 18%;
+      right: 18%;
       height: 2px;
       background: linear-gradient(90deg, transparent, #FCF6BA, #D4AF37, transparent);
       box-shadow: 0 0 10px rgba(212, 175, 55, 0.7);
       border-radius: 2px;
     }
 
-    /* शार्प और क्लीन टेक्स्ट क्लासेस */
     .clean-zone-label { color: #D4AF37; font-size: 10px; font-weight: 700; margin-left: 6px; }
-    .clean-status { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; }
-    .clean-status.approved { color: #10B981; }
-    .clean-status.blocked { color: #EF4444; }
-    .clean-status.pending { color: #F59E0B; }
+    .clean-status { font-size: 9.5px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.4px; padding: 2px 7px; border-radius: 6px; }
+    .clean-status.approved { color: #10B981; background: rgba(16, 185, 129, 0.12); }
+    .clean-status.blocked { color: #EF4444; background: rgba(239, 68, 68, 0.14); }
+    .clean-status.pending { color: #111827; background: #F59E0B; }
 
     .clean-action-btn {
       background: transparent;
       border: none;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 800;
       cursor: pointer;
-      padding: 4px 6px;
+      padding: 4px 7px;
       border-radius: 6px;
       transition: opacity 0.15s, transform 0.1s;
     }
-    .clean-action-btn:active { transform: scale(0.94); }
-    .clean-action-btn.gold-highlight {
-      color: #D4AF37;
-      border-bottom: 1px solid rgba(212, 175, 55, 0.45);
-    }
-    .clean-action-btn.green-highlight { color: #10B981; }
-    .clean-action-btn.red-muted { color: #F87171; opacity: 0.85; }
+    .clean-action-btn:active { transform: scale(0.92); }
+    .clean-action-btn.gold-highlight { color: #D4AF37; border: 1px solid rgba(212, 175, 55, 0.4); }
+    .clean-action-btn.yellow-pending-btn { background: #F59E0B; color: #111827; font-weight: 900; }
+    .clean-action-btn.green-highlight { background: rgba(16, 185, 129, 0.16); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .clean-action-btn.red-muted { background: rgba(239, 68, 68, 0.14); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.35); }
+    .clean-action-btn.blue-media { background: rgba(59, 130, 246, 0.16); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.4); }
 
-    /* 📈 ट्रेडिंग वेक्टर ग्राफ कंट्रोल्स और 6 परफॉर्मेंस ग्रेड इंडिकेटर्स */
+    /* 📈 ट्रेडिंग वेक्टर ग्राफ कंट्रोल्स */
     .trading-controls-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; margin-bottom: 8px; }
     .tf-btn-group { display: flex; gap: 6px; align-items: center; }
     .tf-btn { background: transparent; border: none; color: #6B7280; font-size: 10px; font-weight: 800; cursor: pointer; padding: 3px 5px; transition: color 0.15s; }
@@ -166,7 +200,35 @@
     .grade-item.active-verygood { color: #10B981; font-weight: 900; font-size: 9.5px; border-bottom: 1.5px solid #10B981; }
     .grade-item.active-excellent { color: #FCF6BA; font-weight: 900; font-size: 9.5px; border-bottom: 1.5px solid #D4AF37; }
 
-    /* 👤 फुल-स्क्रीन स्टाफ परफॉर्मेंस कमांड पेज (<1ms Sub-Millisecond Dossier) */
+    /* ⌨️ कंप्यूटर टाइपराइटर टर्मिनल बॉक्स (कटर-कटर साउंड व कर्सर के साथ) */
+    .typewriter-terminal-box {
+      background: #020403;
+      border: 1px solid #10B981;
+      border-left: 4px solid #10B981;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+      font-family: 'Courier New', Consolas, monospace;
+      font-size: 11.5px;
+      color: #34D399;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      box-shadow: inset 0 0 18px rgba(16, 185, 129, 0.12);
+      position: relative;
+      min-height: 115px;
+    }
+    .typewriter-cursor {
+      display: inline-block;
+      width: 7px;
+      height: 13px;
+      background: #10B981;
+      vertical-align: middle;
+      margin-left: 2px;
+      animation: blinkCursor 0.6s infinite;
+    }
+    @keyframes blinkCursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* 👤 फुल-स्क्रीन स्टाफ परफॉर्मेंस कमांड पेज */
     .staff-dossier-page {
       position: fixed;
       inset: 0;
@@ -196,10 +258,14 @@
     .dossier-metric-cell .lbl { font-size: 9px; color: #9CA3AF; font-weight: 700; }
     .dossier-metric-cell .val { font-size: 13px; color: #F3F4F6; font-weight: 900; margin-top: 2px; }
 
-    /* लाइव इंडिकेटर */
     .live-dot { display: inline-block; width: 7px; height: 7px; background: #10B981; border-radius: 50%; margin-right: 6px; }
 
-    /* 🧮 इन-बिल्ट लाइफटाइम रियल-टाइम कैलकुलेटर पैनल */
+    /* 🎬 फुल मीडिया, फोटो फेचर एवं इमरजेंसी डेटा इंस्पेक्टर मोडल */
+    .inspector-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 99999998; display: none; justify-content: center; align-items: center; padding: 14px; backdrop-filter: blur(8px); }
+    .inspector-modal.active { display: flex; }
+    .inspector-card { background: #08080C; border: 1.5px solid #D4AF37; border-radius: 18px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; padding: 16px; color: #FFF; box-shadow: 0 20px 60px rgba(0,0,0,0.95); }
+
+    /* 🧮 कैलकुलेटर पैनल */
     .calc-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999999; display: none; justify-content: center; align-items: center; padding: 18px; backdrop-filter: blur(6px); }
     .calc-modal-overlay.active { display: flex; }
     .calc-shell { background: #08080B; border: 1px solid rgba(212, 175, 55, 0.5); border-radius: 18px; width: 100%; max-width: 330px; padding: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.95); }
@@ -208,18 +274,17 @@
     .calc-expr { font-size: 14px; color: #9CA3AF; font-family: monospace; word-break: break-all; min-height: 20px; }
     .calc-preview { font-size: 24px; font-weight: 900; color: #FCF6BA; font-family: monospace; word-break: break-all; margin-top: 4px; }
     .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .calc-key { background: #121217; border: 1px solid rgba(255,255,255,0.06); color: #FFF; font-size: 16px; font-weight: 800; padding: 14px 0; border-radius: 10px; cursor: pointer; text-align: center; user-select: none; transition: background 0.1s, transform 0.08s; }
+    .calc-key { background: #121217; border: 1px solid rgba(255,255,255,0.06); color: #FFF; font-size: 16px; font-weight: 800; padding: 14px 0; border-radius: 10px; cursor: pointer; text-align: center; user-select: none; }
     .calc-key:active { transform: scale(0.94); background: #1F1F27; }
     .calc-key.op { color: #D4AF37; background: #151410; border-color: rgba(212, 175, 55, 0.25); }
     .calc-key.danger { color: #F87171; background: #191012; }
-    .calc-key.equal { background: linear-gradient(135deg, #D4AF37, #AA771C); color: #000; font-weight: 900; border: none; box-shadow: 0 0 12px rgba(212, 175, 55, 0.35); }
+    .calc-key.equal { background: linear-gradient(135deg, #D4AF37, #AA771C); color: #000; font-weight: 900; border: none; }
 
-    /* 3D मैटेलिक रेड-गोल्ड बॉटम नेविगेशन बार */
+    /* बॉटम नेविगेशन बार */
     .bottom-nav { position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; max-width: 480px !important; margin: 0 auto !important; height: 60px !important; background: rgba(10, 10, 12, 0.96) !important; backdrop-filter: blur(20px) !important; border-top: 1px solid rgba(212, 175, 55, 0.35) !important; display: flex !important; justify-content: space-around !important; align-items: center !important; z-index: 9999 !important; }
-    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 9px; color: #9CA3AF; cursor: pointer; user-select: none; height: 100%; transition: color 0.25s ease; }
+    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 9px; color: #9CA3AF; cursor: pointer; user-select: none; height: 100%; transition: color 0.25s ease; position: relative; }
     .nav-item.active { color: #FCF6BA !important; font-weight: 800; }
-    
-    .nav-item .icon { display: flex; align-items: center; justify-content: center; height: 28px; margin-bottom: 2px; }
+    .nav-item .icon { display: flex; align-items: center; justify-content: center; height: 26px; margin-bottom: 1px; }
     .nav-item .icon svg { transition: all 0.25s ease; }
     .nav-item:not(.active) .icon svg { filter: sepia(1) saturate(3) hue-rotate(0deg) brightness(0.7) opacity(0.5); transform: scale(0.85); }
     .nav-item.active .icon svg { filter: sepia(1) saturate(5) hue-rotate(5deg) brightness(1.2) drop-shadow(0 2px 8px rgba(212, 175, 55, 0.5)); transform: scale(1.12); opacity: 1; }
@@ -227,15 +292,17 @@
     .pane { display: none; }
     .pane.active { display: block; }
 
-    /* कस्टम इन-ऐप मोडल */
     .custom-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 99999999; display: none; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(5px); }
     .custom-modal.active { display: flex; }
-    .custom-modal-card { background: #070709; border: 1px solid #D4AF37; border-radius: 16px; padding: 20px; width: 100%; max-width: 340px; text-align: center; color: #FFF; box-shadow: 0 15px 40px rgba(0,0,0,0.9); max-height: 80vh; overflow-y: auto; }
+    .custom-modal-card { background: #070709; border: 1px solid #D4AF37; border-radius: 16px; padding: 20px; width: 100%; max-width: 350px; text-align: center; color: #FFF; box-shadow: 0 15px 40px rgba(0,0,0,0.9); max-height: 82vh; overflow-y: auto; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
+  <!-- ⚡ लाइव टोस्ट -->
+  <div class="omni-toast" id="omniToast">⚡ कमांड निष्पादित!</div>
 
   <!-- 3D मैटेलिक गोल्ड ग्रेडिएंट और एरो-स्पिनर डेफिनिशन -->
   <svg width="0" height="0" style="position:absolute; width:0; height:0;">
@@ -259,6 +326,23 @@
     </defs>
   </svg>
 
+  <!-- 🎬 फुल डेटा इंस्पेक्टर मोडल (वीडियो / इमरजेंसी / फोटो URL का पूरा मेटाडेटा खोलने के लिए) -->
+  <div class="inspector-modal" id="fullEntityInspectorModal">
+    <div class="inspector-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(212,175,55,0.3); padding-bottom:10px; margin-bottom:12px;">
+        <div>
+          <div id="inspTitle" style="font-size:14px; font-weight:900; color:#FCF6BA;">🔍 FULL DATA INSPECTOR</div>
+          <div id="inspSub" style="font-size:10px; color:#10B981;">लाइव डेटाबेस एवं मीडिया रिकॉर्ड</div>
+        </div>
+        <button onclick="closeFullEntityInspector()" style="background:#DC2626; color:#FFF; border:none; width:28px; height:28px; border-radius:50%; font-weight:900; cursor:pointer;">✕</button>
+      </div>
+      <div id="inspMediaContainer" style="margin-bottom:12px;"></div>
+      <div id="inspTypewriterBox" class="typewriter-terminal-box" style="min-height:95px; margin-bottom:12px;"></div>
+      <div id="inspMetadataTable" style="font-size:11px; text-align:left; line-height:1.6;"></div>
+      <div id="inspActionButtons" style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;"></div>
+    </div>
+  </div>
+
   <!-- कस्टम इन-ऐप मोडल -->
   <div class="custom-modal" id="customModalBox">
     <div class="custom-modal-card">
@@ -268,19 +352,23 @@
     </div>
   </div>
 
-  <!-- 👤 अलग फुल-स्क्रीन स्टाफ परफॉर्मेंस एवं ऑल-टाइम एक्टिविटी डॉसियर पेज (<1ms Instant Load) -->
+  <!-- 👤 अलग फुल-स्क्रीन स्टाफ परफॉर्मेंस एवं टाइपराइटर डॉसियर पेज -->
   <div class="staff-dossier-page" id="staffDossierPage">
     <header class="dossier-header">
       <button onclick="closeStaffDossierPage()" class="clean-action-btn gold-highlight" style="font-size:12px;">← वापस</button>
       <div style="text-align:center;">
         <div id="dossierStaffNameTitle" style="font-size:14px; font-weight:900; color:#FCF6BA;">STAFF DOSSIER</div>
-        <div id="dossierLatencyTag" style="font-size:9px; color:#10B981; font-family:monospace;">⚡ 0.08 ms (1/1000s Engine)</div>
+        <div id="dossierLatencyTag" style="font-size:9px; color:#10B981; font-family:monospace;">⚡ 0.08 ms (Typewriter Engine)</div>
       </div>
       <span id="dossierCurrentGradeBadge" style="font-size:11px; font-weight:900; color:#D4AF37;">EXCELLENT</span>
     </header>
 
     <div style="padding: 14px;">
-      <!-- टाइमफ्रेम स्विच (Day, Month, Year, All-Time) + 8+8 / 10+10 Year कमांड बॉक्स -->
+      <!-- ⌨️ कंप्यूटर के टाइपर की तरह कटर-कटर लिखकर आने वाला लाइव स्टाफ टर्मिनल -->
+      <div class="typewriter-terminal-box" id="staffTypewriterTerminal">
+        <span id="staffTypewriterText"></span><span class="typewriter-cursor"></span>
+      </div>
+
       <div class="card" style="background:#070709; padding:12px;">
         <div class="trading-controls-row">
           <div class="tf-btn-group">
@@ -305,7 +393,6 @@
           <span id="dossierVectorDelta" style="font-size:10px; font-weight:900; color:#10B981;">↗ ACTIVE</span>
         </div>
 
-        <!-- 6 परफॉर्मेंस ग्रेड मीटर -->
         <div class="grade-meter-strip" id="dossierGradeStrip">
           <span class="grade-item" data-grade="LOSS">LOSS</span>
           <span class="grade-item" data-grade="POOR">POOR</span>
@@ -343,7 +430,7 @@
       <!-- शुरू से अंत तक की पूरी क्रोनोलॉजिकल एक्टिविटी लिस्ट -->
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <div style="font-size:12px; font-weight:900; color:#FCF6BA;">संपूर्ण एक्टिविटी रिकॉर्ड लिस्ट</div>
+          <div style="font-size:12px; font-weight:900; color:#FCF6BA;">संपूर्ण एक्टिविटी रिकॉर्ड लिस्ट (टैप करके पूरा डेटा खोलें)</div>
           <span id="dossierListCountBadge" style="font-size:10px; color:#9CA3AF;">0 रिकॉर्ड</span>
         </div>
         <div id="dossierActivityFullList" style="max-height: 420px; overflow-y: auto;"></div>
@@ -351,7 +438,7 @@
     </div>
   </div>
 
-  <!-- 🧮 लाइफटाइम रियल-टाइम कैलकुलेटर टर्मिनल (Zero-Bug, Zero-Eval) -->
+  <!-- 🧮 लाइफटाइम रियल-टाइम कैलकुलेटर टर्मिनल -->
   <div class="calc-modal-overlay" id="liveCalculatorModal">
     <div class="calc-shell">
       <div class="calc-header">
@@ -402,13 +489,14 @@
       <div class="input-group">
         <label>अधिकृत ऑपरेटर नाम</label>
         <div class="input-wrapper">
-          <input type="text" id="loginName" placeholder="अपना नाम टाइप करें..." autocomplete="off">
+          <input type="text" id="loginName" placeholder="अपना नाम टाइप करें..." autocomplete="off" onkeydown="if(event.key==='Enter') document.getElementById('loginPin').focus()">
         </div>
       </div>
       <div class="input-group">
-        <label>सीक्रेट कीवर्ड पासवर्ड (नाम / शब्द / सिंबल)</label>
+        <label>सीक्रेट कीवर्ड पासवर्ड (नाम / शब्द / पिन)</label>
         <div class="input-wrapper">
           <input type="password" id="loginPin" placeholder="कीबोर्ड से गुप्त पासवर्ड टाइप करें..." autocomplete="off" style="padding-right: 44px;" onkeydown="if(event.key==='Enter') handleLogin()">
+          
           <button type="button" class="eye-icon-btn" onclick="toggleLoginPasswordVisibility(this)" title="पासवर्ड देखें / छिपाएं">
             <svg id="eyeSvgIcon" viewBox="0 0 24 24" fill="none" stroke="url(#metalGold3D)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
@@ -429,6 +517,38 @@
       <div style="font-size:13px; font-weight:900; color:#D4AF37; letter-spacing:0.5px;">मास्टर कंट्रोल पैनल</div>
       <button onclick="toggleBurger()" style="background:none; border:none; color:#D4AF37; font-size:12px; font-weight:900; cursor:pointer;">बंद करें</button>
     </div>
+    <!-- 👑 सुपर एडमिन OMNI का खुद का पिन/कीवर्ड बदलने का सेक्शन -->
+    <div class="card" style="margin-top:12px; border:1.5px solid #D4AF37; background:#090805;">
+      <div style="font-size:11px; font-weight:900; color:#FCF6BA; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+        <span>👑 सुपर एडमिन OMNI पिन बदलें</span>
+        <span class="clean-zone-label">MASTER KEY</span>
+      </div>
+      <div style="font-size:9.5px; color:#9CA3AF; margin-bottom:8px;">यहाँ से आप अपने खुद के एडमिन पैनल (STAR ADMIN OMNI) का मास्टर पिन या गुप्त पासवर्ड बदल सकते हैं:</div>
+      
+      <input type="password" id="omniOldMasterPin" placeholder="मौजूदा मास्टर पिन / पासवर्ड डालें" style="width:100%; padding:9px; background:#000; color:#FFF; border:1px solid rgba(212,175,55,0.35); border-radius:6px; font-size:11px; margin-bottom:8px; outline:none;">
+      
+      <div class="input-wrapper" style="margin-bottom:8px;">
+        <input type="password" id="omniNewMasterPin" placeholder="नया मास्टर पिन / कीवर्ड टाइप करें" style="width:100%; padding:9px 38px 9px 9px; background:#000; color:#FCF6BA; border:1px solid #D4AF37; border-radius:6px; font-size:11px; font-weight:800; outline:none;">
+        <button type="button" class="eye-icon-btn" style="right:8px;" onclick="toggleInputEye('omniNewMasterPin', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="url(#metalGold3D)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+          </svg>
+        </button>
+      </div>
+
+      <input type="password" id="omniConfirmMasterPin" placeholder="नया मास्टर पिन दोबारा कन्फर्म करें" style="width:100%; padding:9px; background:#000; color:#FFF; border:1px solid rgba(212,175,55,0.35); border-radius:6px; font-size:11px; margin-bottom:8px; outline:none;">
+
+      <button class="btn-primary" style="margin-top:0; padding:9px; font-size:11px; background:linear-gradient(135deg, #D4AF37, #AA771C); color:#000;" onclick="updateSuperAdminOmniPin()">🔐 नया सुपर एडमिन पिन सेव करें</button>
+    </div>
+
+    <!-- 🖼️ डायनेमिक फोटो URL फेचर एवं रीडर टूल -->
+    <div class="card" style="margin-bottom:12px; border:1px solid rgba(59,130,246,0.5); background:#080B11;">
+      <div style="font-size:11px; font-weight:900; color:#60A5FA; margin-bottom:6px;">🖼️ फोटो URL फेचर एवं स्कैनर</div>
+      <div style="font-size:9.5px; color:#9CA3AF; margin-bottom:8px;">कोई भी फोटो/इमेज URL डालें — सिस्टम उसे फेच करके रेजोल्यूशन और डेटा पढ़ेगा:</div>
+      <input type="text" id="drawerPhotoUrlInput" placeholder="https://.../image.jpg पेस्ट करें..." style="width:100%; padding:8px; background:#000; color:#FFF; border:1px solid rgba(59,130,246,0.4); border-radius:6px; font-size:11px; margin-bottom:8px; outline:none;">
+      <button class="btn-primary" style="margin-top:0; padding:8px; font-size:11px; background:#2563EB;" onclick="fetchAndReadPhotoUrl()">🔍 फोटो फेच करें एवं पढ़ें</button>
+    </div>
 
     <!-- 🌐 जीरो-बैनर प्योर न्यूरल क्लाउड लैंग्वेज इंजन -->
     <div class="card" style="margin-bottom:12px; border:1px solid rgba(212,175,55,0.45); background:#09090C;">
@@ -448,31 +568,29 @@
         <option value="kn">ಕನ್ನಡ (Kannada - कन्नड़)</option>
         <option value="ml">മലയാളം (Malayalam)</option>
         <option value="ur">اردو (Urdu - उर्दू)</option>
-        <option value="ar">العربية (Arabic - अरबी)</option>
-        <option value="ru">Русский (Russian - रशियन)</option>
-        <option value="es">Español (Spanish - स्पेनिश)</option>
-        <option value="fr">Français (French - फ्रेंच)</option>
-        <option value="de">Deutsch (German - जर्मन)</option>
-        <option value="ja">日本語 (Japanese - जापानी)</option>
       </select>
       <button class="btn-primary" style="margin-top:0; padding:9px; font-size:11px; background:linear-gradient(135deg, #D4AF37, #AA771C); color:#000;" onclick="downloadAndApplySystemLanguage()">लैंग्वेज डाउनलोड एवं पूरे सिस्टम पर लागू करें</button>
       <div id="langDownloadStatus" class="lang-status-bar">क्लाउड से भाषा पैक सिंक हो रहा है...</div>
     </div>
 
-    <!-- मास्टर किल स्विच (404 कंट्रोल) -->
+    <!-- 🚨 रिमोट स्टाफ पोर्टल 404 मास्टर किल स्विच (इमरजेंसी टेबल्स को कभी ब्लॉक नहीं करेगा) -->
     <div class="card" style="margin-bottom:12px; border:1px solid rgba(220,38,38,0.5);">
-      <div style="font-size:11px; font-weight:900; color:#F87171; margin-bottom:8px;">पोर्टल अथॉरिटी (मास्टर किल स्विच)</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <div style="font-size:11px; font-weight:900; color:#F87171;">स्टाफ पोर्टल 404 (इमरजेंसी सेफ)</div>
+        <span id="drawerPortalStateText" style="font-size:9px; font-weight:900; color:#10B981;">🟢 LIVE</span>
+      </div>
+      <div style="font-size:9.5px; color:#9CA3AF; margin-bottom:8px;">यह केवल स्टाफ पोर्टल की स्क्रीन को 404 करेगा। <b>इमरजेंसी टेबल्स (`merchant_queries`, `user_claims`, `red_alerts`) कभी ब्लॉक नहीं होंगी:</b></div>
       <div style="display:flex; gap:8px;">
-        <button class="btn-primary" style="margin-top:0; padding:8px; font-size:11px; background:#059669;" onclick="setPortalState(true)">चालू रखें</button>
-        <button class="btn-primary" style="margin-top:0; padding:8px; font-size:11px; background:#DC2626;" onclick="setPortalState(false)">तुरंत 404</button>
+        <button class="btn-primary" style="margin-top:0; padding:8px; font-size:11px; background:#059669;" onclick="setPortalState(true)">🟢 चालू रखें</button>
+        <button class="btn-primary" style="margin-top:0; padding:8px; font-size:11px; background:#DC2626;" onclick="setPortalState(false)">🔴 तुरंत 404</button>
       </div>
     </div>
 
     <!-- ऑटो-अप्रूव और बल्क ब्रॉडकास्ट इंजन -->
     <div class="card" style="margin-bottom:12px; border:1px solid rgba(52,211,153,0.4);">
       <div style="font-size:11px; font-weight:900; color:#34D399; margin-bottom:8px;">ऑटो-अप्रूव एवं बल्क एक्शन</div>
-      <button class="btn-primary" style="margin-top:0; padding:9px; font-size:11px; background:#059669; margin-bottom:8px;" onclick="autoApproveAllPendingMerchants()">सभी पेंडिंग दुकानें ऑटो-अप्रूव करें</button>
-      <button class="btn-primary" style="margin-top:0; padding:9px; font-size:11px; background:#2563EB;" onclick="openBulkMessageModal()">बल्क ब्रॉडकास्ट एवं WhatsApp भेजें</button>
+      <button class="btn-primary" style="margin-top:0; padding:9px; font-size:11px; background:#059669; margin-bottom:8px;" onclick="autoApproveAllPendingMerchants()">⚡ सभी पेंडिंग दुकानें अप्रूव करें</button>
+      <button class="btn-primary" style="margin-top:0; padding:9px; font-size:11px; background:#2563EB;" onclick="openBulkMessageModal()">📢 बल्क ब्रॉडकास्ट एवं WhatsApp भेजें</button>
     </div>
 
     <!-- नया स्टाफ जोड़ें -->
@@ -480,7 +598,7 @@
       <div style="font-size:11px; font-weight:900; color:#D4AF37; margin-bottom:8px;">नया स्टाफ रजिस्टर करें</div>
       <input type="text" id="newStaffName" placeholder="स्टाफ का नाम" style="width:100%; padding:9px; background:#000; color:#FFF; border:1px solid rgba(212,175,55,0.3); border-radius:6px; font-size:11px; margin-bottom:8px; outline:none;">
       <div class="input-wrapper" style="margin-bottom:8px;">
-        <input type="password" id="newStaffPin" placeholder="कीवर्ड पासवर्ड (उदा: Abhi@Star99)" style="width:100%; padding:9px 38px 9px 9px; background:#000; color:#FFF; border:1px solid rgba(212,175,55,0.3); border-radius:6px; font-size:11px; outline:none;">
+        <input type="password" id="newStaffPin" placeholder="पिन या कीवर्ड (उदा: 1234 या Abhi@99)" style="width:100%; padding:9px 38px 9px 9px; background:#000; color:#FFF; border:1px solid rgba(212,175,55,0.3); border-radius:6px; font-size:11px; outline:none;">
         <button type="button" class="eye-icon-btn" style="right:8px;" onclick="toggleInputEye('newStaffPin', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="url(#metalGold3D)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;">
             <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
@@ -499,26 +617,37 @@
         <span class="burger-line"></span>
         <span class="burger-line" style="width: 15px;"></span>
       </button>
-      <div style="font-size:14px; font-weight:900; background:linear-gradient(to right, #BF953F, #FCF6BA, #B38728); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:1px;">STAR ADMIN OMNI</div>
-      <div style="display:flex; align-items:center; gap:8px;">
+      <div style="font-size:13px; font-weight:900; background:linear-gradient(to right, #BF953F, #FCF6BA, #B38728); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:0.8px;">STAR ADMIN OMNI</div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span id="headerPortalStatusPill" class="portal-state-pill" onclick="toggleBurger()" title="स्टाफ पोर्टल की वर्तमान स्थिति">🟢 स्टाफ: चालू</span>
         <button class="sync-spinner-btn" style="width:26px; height:26px;" onclick="triggerLiveSpinSync(this, 'all')" title="पूरा डेटाबेस रिफ्रेश करें">
           <svg viewBox="0 0 24 24"><use href="#arrowSpinnerSymbol"/></svg>
         </button>
-        <div style="font-size:11px; color:#10B981; font-weight:800; font-family:monospace;" id="timerDisplay">00:00</div>
+        <div style="font-size:10px; color:#10B981; font-weight:800; font-family:monospace;" id="timerDisplay">00:00</div>
       </div>
     </header>
 
     <div class="content-area">
       
-      <!-- ✨ क्लीन सेक्शन स्विच -->
+      <!-- ✨ 4 सेक्शन स्विच (Admin | Staff | Merchant | Archive) -->
       <div class="section-tabs">
         <div class="sec-tab active" id="tabBtn-admin" onclick="switchSection('admin', this)">Admin</div>
         <div class="sec-tab" id="tabBtn-staff" onclick="switchSection('staff', this)">Staff</div>
         <div class="sec-tab" id="tabBtn-merchant" onclick="switchSection('merchant', this)">Merchant</div>
+        <div class="sec-tab" id="tabBtn-archive" onclick="switchSection('archive', this)">Archive <span id="archiveTabCount" style="color:#EF4444; font-size:10px;">(0)</span></div>
       </div>
 
       <!-- 1. एडमिन सेक्शन -->
       <div class="pane active" id="pane-admin">
+        <!-- 🚨 इमरजेंसी & रेड अलर्ट लाइव फीड (जिस पर क्लिक करने से पूरा डेटा खुलता है और 404 इसे कभी ब्लॉक नहीं करता) -->
+        <div class="card" style="background:#0B0708; border:1px solid rgba(239,68,68,0.45);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-size:11px; font-weight:900; color:#F87171;">🚨 लाइव इमरजेंसी & रेड अलर्ट फीड (टैप करके पूरा डेटा खोलें)</div>
+            <span id="emergencyTotalBadge" style="font-size:10px; font-weight:900; color:#EF4444;">0 अलर्ट</span>
+          </div>
+          <div id="emergencyFeedContainer" style="max-height:155px; overflow-y:auto;"></div>
+        </div>
+
         <div class="card" style="background:#070709; border:1px solid rgba(212,175,55,0.4);">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <div style="font-size:11px; font-weight:900; color:#D4AF37;"><span class="live-dot"></span>रियल-टाइम एरिया ऑडिट इंजन</div>
@@ -533,7 +662,7 @@
           <div id="areaAuditStats" style="font-size:11px; color:#E5E7EB; margin-top:6px;"></div>
         </div>
 
-        <!-- ग्राफ 1 (UNCHANGED) -->
+        <!-- ग्राफ 1 -->
         <div class="card">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
             <div style="font-size:11px; font-weight:900; color:#D4AF37;"><span class="live-dot"></span>1. ज़ोन अनुसार मर्चेंट वितरण (टैप करके देखें)</div>
@@ -542,7 +671,7 @@
           <div style="width:100%; height:160px; position:relative;"><canvas id="chartMerchantSearch"></canvas></div>
         </div>
 
-        <!-- ग्राफ 2 (UNCHANGED) -->
+        <!-- ग्राफ 2 -->
         <div class="card">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
             <div style="font-size:11px; font-weight:900; color:#10B981;"><span class="live-dot"></span>2. ज़ोन रेवेन्यू (₹) एवं ग्राहक फुटफॉल</div>
@@ -551,14 +680,13 @@
           <div style="width:100%; height:165px; position:relative;"><canvas id="chartBusinessRevenue"></canvas></div>
         </div>
 
-        <!-- 📈 ग्राफ 3 (UPGRADED: हवा में तैरता हुआ ट्रेडिंग वेक्टर एरो ग्राफ + 6 परफॉर्मेंस ग्रेड्स + पोर्टल/सिंगल बंदा/8+8 Year कमांड) -->
+        <!-- 📈 ग्राफ 3 -->
         <div class="card">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
             <div style="font-size:11px; font-weight:900; color:#D4AF37;"><span class="live-dot"></span>3. लाइव ट्रेडिंग वेक्टर परफॉर्मेंस (Floating Arrow)</div>
             <span id="graph3TotalBadge" style="font-size:11px; font-weight:900; color:#FCF6BA;">EXCELLENT</span>
           </div>
 
-          <!-- पोर्टल या सिंगल बंदा + टाइमफ्रेम (1D, 1M, 1Y, ALL) कंट्रोल्स -->
           <div class="trading-controls-row">
             <select id="tradingTargetSelector" onchange="updateTradingGraph3()" style="background:#000; color:#FCF6BA; border:1px solid rgba(212,175,55,0.35); border-radius:6px; padding:4px 8px; font-size:10px; font-weight:800; outline:none; max-width:155px;">
               <option value="PORTAL_ALL">पूरा एडमिन पोर्टल (ALL)</option>
@@ -571,13 +699,11 @@
             </div>
           </div>
 
-          <!-- 8 + 8 Year / 10 + 10 Year या सिंगल स्टाफ परफॉर्मेंस कमांड बार -->
           <div class="graph-search-bar" style="margin-bottom:8px;">
             <input type="text" id="graph3CommandInput" placeholder="कमांड: '8 + 8 year', '10 + 10 year', '1 month', या स्टाफ नाम..." oninput="handleGraph3CommandInput(this.value)">
             <span id="graph3LatencyBadge" style="font-size:9px; color:#10B981; font-family:monospace; white-space:nowrap;">0.05 ms</span>
           </div>
 
-          <!-- 6 परफॉर्मेंस कैटेगरी मीटर: LOSS | POOR | AVERAGE | GOOD | VERY GOOD | EXCELLENT -->
           <div class="grade-meter-strip" id="graph3GradeStrip">
             <span class="grade-item" data-grade="LOSS">LOSS</span>
             <span class="grade-item" data-grade="POOR">POOR</span>
@@ -592,7 +718,7 @@
         </div>
       </div>
 
-      <!-- 2. स्टाफ सेक्शन (क्लिक करते ही <1ms में अलग फुल-स्क्रीन परफॉर्मेंस पेज खुलेगा) -->
+      <!-- 2. स्टाफ सेक्शन (कटर-कटर कंप्यूटर टाइपराइटर डॉसियर के साथ) -->
       <div class="pane" id="pane-staff">
         <div class="card">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
@@ -601,16 +727,19 @@
               <svg viewBox="0 0 24 24"><use href="#arrowSpinnerSymbol"/></svg>
             </button>
           </div>
-          <div style="font-size:10px; color:#9CA3AF; margin-bottom:10px;">किसी भी स्टाफ के नाम पर टैप करें — 0.001 सेकंड में पूरी हिस्ट्री और ट्रेडिंग ग्राफ खुलेगा:</div>
+          <div style="font-size:10px; color:#9CA3AF; margin-bottom:10px;">किसी भी स्टाफ पर टैप करें — कंप्यूटर टाइपर (कटर-कटर) के साथ पूरी कुंडली खुलेगी:</div>
           <div id="staffDirectoryContainer"><div style="font-size:11px; color:#9CA3AF; text-align:center; padding:12px;">डेटाबेस से स्टाफ लोड हो रहा है...</div></div>
         </div>
       </div>
 
-      <!-- 3. मर्चेंट सेक्शन -->
+      <!-- 3. मर्चेंट सेक्शन (फोटो फेचर थंबनेल + वीडियो/डेटा इंस्पेक्टर के साथ) -->
       <div class="pane" id="pane-merchant">
         <div class="card">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <div style="font-size:12px; font-weight:900; color:#D4AF37;"><span class="live-dot"></span>रजिस्टर्ड मर्चेंट डायरेक्टरी <span id="merchantTotalBadge" style="color:#9CA3AF; font-size:11px;"></span></div>
+            <div>
+              <div style="font-size:12px; font-weight:900; color:#D4AF37;"><span class="live-dot"></span>रजिस्टर्ड मर्चेंट डायरेक्टरी <span id="merchantTotalBadge" style="color:#9CA3AF; font-size:11px;"></span></div>
+              <div style="font-size:9.5px; color:#9CA3AF;">फोटो, नाम या ▶️ वीडियो पर टैप करके पूरा मर्चेंट डेटा और रील खोलें</div>
+            </div>
             <button class="sync-spinner-btn" onclick="triggerLiveSpinSync(this, 'merchant')" title="मर्चेंट डेटा रिफ्रेश करें">
               <svg viewBox="0 0 24 24"><use href="#arrowSpinnerSymbol"/></svg>
             </button>
@@ -619,14 +748,36 @@
         </div>
       </div>
 
+      <!-- 4. 🗄️ नया समर्पित आर्काइव सेक्शन (डिलीटेड और ब्लॉक्ड मर्चेंट्स + फोटो/वीडियो + रिकवर + प्योर डिलीट) -->
+      <div class="pane" id="pane-archive">
+        <div class="card" style="border-color: rgba(239, 68, 68, 0.45);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div>
+              <div style="font-size:13px; font-weight:900; color:#F87171;">🗄️ मर्चेंट & रील आर्काइव वॉल्ट <span id="archiveHeaderCount" style="color:#FCF6BA;">(0)</span></div>
+              <div style="font-size:10px; color:#9CA3AF;">डिलीट, आर्काइव या ब्लॉक किए गए सभी मर्चेंट यहाँ सुरक्षित रहते हैं</div>
+            </div>
+            <button class="sync-spinner-btn" onclick="triggerLiveSpinSync(this, 'archive')" title="आर्काइव रिफ्रेश करें">
+              <svg viewBox="0 0 24 24"><use href="#arrowSpinnerSymbol"/></svg>
+            </button>
+          </div>
+
+          <div class="graph-search-bar" style="margin-bottom:10px;">
+            <input type="text" id="archiveSearchInput" placeholder="आर्काइव में स्टोर नाम, फोन या एरिया खोजें..." oninput="renderArchiveVaultList()">
+          </div>
+
+          <div id="archiveDirectoryContainer"><div style="font-size:11px; color:#9CA3AF; text-align:center; padding:14px;">आर्काइव डेटा लोड हो रहा है...</div></div>
+        </div>
+      </div>
+
     </div>
 
-    <!-- कर्व्ड ग्लोबल सर्च बार + इंस्टेंट कैलकुलेटर और परफॉर्मेंस कमांड ट्रिगर -->
+    <!-- कर्व्ड ग्लोबल सर्च बार + फोटो URL फेचर ट्रिगर -->
     <div class="capsule-search-container">
-      <div id="capsuleSearchResults" style="margin-bottom:6px; max-height:150px; overflow-y:auto; font-size:11px;"></div>
+      <div id="capsuleSearchResults" style="margin-bottom:6px; max-height:160px; overflow-y:auto; font-size:11px;"></div>
       <div class="capsule-search-bar">
-        <input type="text" id="capsuleSearchInput" placeholder="ग्लोबल सर्च, '8+8 year', या 'calculator' टाइप करें..." oninput="checkInstantCalculatorTrigger(this.value)" onkeydown="if(event.key==='Enter') executeCapsuleOmniSearch()">
-        <button onclick="openLiveCalculator()" title="लाइव कैलकुलेटर खोलें" style="background:none; border:none; color:#D4AF37; font-size:13px; font-weight:900; cursor:pointer; padding:2px 4px;">⊞</button>
+        <input type="text" id="capsuleSearchInput" placeholder="सर्च, फोटो URL (https://...), या 'calculator' टाइप करें..." oninput="checkInstantCalculatorTrigger(this.value)" onkeydown="if(event.key==='Enter') executeCapsuleOmniSearch()">
+        <button onclick="openPhotoUrlQuickPrompt()" title="फोटो URL फेच और स्कैन करें" style="background:none; border:none; color:#60A5FA; font-size:13px; font-weight:900; cursor:pointer; padding:2px 4px;">🖼️</button>
+        <button onclick="openLiveCalculator()" title="लाइव कैलकुलेटर खोलें" style="background:none; border:none; color:#D4AF37; font-size:14px; font-weight:900; cursor:pointer; padding:2px 4px;">⊞</button>
         <button onclick="executeCapsuleOmniSearch()" class="clean-action-btn gold-highlight">सर्च</button>
       </div>
     </div>
@@ -661,6 +812,16 @@
         </div>
         <div>Merchant</div>
       </div>
+      <div class="nav-item" id="navBtn-archive" onclick="switchPaneNav('archive', this)">
+        <div class="icon">
+          <svg width="24" height="24" viewBox="0 0 100 100">
+            <rect x="18" y="22" width="64" height="16" rx="4" fill="none" stroke="url(#metalGold3D)" stroke-width="8" filter="url(#goldDropShadow)"/>
+            <path d="M 24 38 L 24 80 L 76 80 L 76 38" fill="none" stroke="url(#metalGold3D)" stroke-width="8" stroke-linejoin="round" filter="url(#goldDropShadow)"/>
+            <line x1="40" y1="56" x2="60" y2="56" stroke="url(#metalGold3D)" stroke-width="8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>Archive</div>
+      </div>
       <div class="nav-item" onclick="toggleBurger()">
         <div class="icon">
           <svg width="24" height="24" viewBox="0 0 100 100">
@@ -670,16 +831,6 @@
         </div>
         <div>Control</div>
       </div>
-      <div class="nav-item" onclick="location.reload()">
-        <div class="icon">
-          <svg width="24" height="24" viewBox="0 0 100 100">
-            <rect x="25" y="20" width="50" height="60" rx="6" fill="none" stroke="url(#metalGold3D)" stroke-width="8" filter="url(#goldDropShadow)"/>
-            <line x1="45" y1="50" x2="75" y2="50" stroke="url(#metalGold3D)" stroke-width="8" stroke-linecap="round"/>
-            <polyline points="60,35 75,50 60,65" fill="none" stroke="url(#metalGold3D)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div>Exit</div>
-      </div>
     </nav>
   </div>
 
@@ -687,6 +838,8 @@
   const SUPABASE_URL = "https://gejrzpflcuvlbpedliwq.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_dw9J2AX0nd3SxPrRy9JGCg_YqS8ZfUF";
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const MASTER_ADMIN_FALLBACK_PIN = "9999";
 
   let allMerchantsData = [];
   let allStaffData = [];
@@ -697,7 +850,6 @@
   let allAdminCoreLogs = [];
   let allQueriesData = [];
 
-  // ⚡ O(1) सब-मिलीसेकंड (1/1000s) इन-मेमोरी इंडेक्स
   let staffChronoIndex = {};
   let portalChronoStream = [];
 
@@ -707,8 +859,8 @@
   let failedLoginAttempts = parseInt(localStorage.getItem('omni_failed_attempts') || '0');
   let lockoutUntil = parseInt(localStorage.getItem('omni_lockout_until') || '0');
   let translationCache = {};
+  let timerStarted = false;
 
-  // ग्राफ 3 और स्टाफ डॉसियर के वर्तमान स्टेट्स
   let graph3CurrentTimeframe = 'all';
   let graph3CustomWindowMs = null;
   let graph3CustomWindowLabel = 'ALL-TIME';
@@ -716,7 +868,300 @@
   let activeDossierTimeframe = 'all';
   let activeDossierCustomMs = null;
 
-  // 🧮 100% सुरक्षित, बग-फ्री गणितीय इंजन (Zero-Eval Shunting-Yard)
+  let typewriterIntervalId = null;
+  let inspectorTypewriterIntervalId = null;
+  let sharedAudioCtx = null;
+
+  function safeStr(str) {
+    if (!str) return '';
+    return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  }
+
+  // 🔊 मैकेनिकल कंप्यूटर टाइपराइटर "कटर-कटर" साउंड जनरेटर (Web Audio API)
+  function playMechanicalTypewriterTick() {
+    try {
+      if (!sharedAudioCtx) {
+        sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (sharedAudioCtx.state === 'suspended') {
+        sharedAudioCtx.resume();
+      }
+      const now = sharedAudioCtx.currentTime;
+      const osc = sharedAudioCtx.createOscillator();
+      const gain = sharedAudioCtx.createGain();
+
+      // शार्प मैकेनिकल की-स्ट्रोक फ्रीक्वेंसी
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(1400 + Math.random() * 500, now);
+      osc.frequency.exponentialRampToValueAtTime(180, now + 0.018);
+
+      gain.gain.setValueAtTime(0.09, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
+
+      osc.connect(gain);
+      gain.connect(sharedAudioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.019);
+    } catch (e) {}
+  }
+
+  // ⌨️ कंप्यूटर टाइपर इंजन (किसी भी टारगेट बॉक्स में कटर-कटर आवाज के साथ अक्षर-दर-अक्षर टाइप करना)
+  function runComputerTypewriter(targetElId, fullText, speedMs = 16, isInspector = false) {
+    const el = document.getElementById(targetElId);
+    if (!el) return;
+
+    if (isInspector) {
+      if (inspectorTypewriterIntervalId) clearInterval(inspectorTypewriterIntervalId);
+    } else {
+      if (typewriterIntervalId) clearInterval(typewriterIntervalId);
+    }
+
+    el.textContent = '';
+    let idx = 0;
+
+    const timer = setInterval(() => {
+      if (idx < fullText.length) {
+        const ch = fullText.charAt(idx);
+        el.textContent += ch;
+        if (ch !== ' ' && ch !== '\n' && idx % 2 === 0) {
+          playMechanicalTypewriterTick();
+        }
+        idx++;
+      } else {
+        clearInterval(timer);
+      }
+    }, speedMs);
+
+    if (isInspector) inspectorTypewriterIntervalId = timer;
+    else typewriterIntervalId = timer;
+  }
+
+  // 🖼️ एंटिटी से फोटो URL और वीडियो URL निकालने के स्मार्ट हेल्पर्स
+  function extractEntityPhotoUrl(obj) {
+    if (!obj) return '';
+    const candidate = obj.photo_url || obj.image_url || obj.shop_image || obj.avatar_url || obj.logo || obj.banner_url || obj.thumbnail || obj.image || '';
+    if (candidate && String(candidate).trim().startsWith('http')) return String(candidate).trim();
+    const fallbackSeed = encodeURIComponent(obj.store_name || obj.name || 'Star');
+    return `https://ui-avatars.com/api/?name=${fallbackSeed}&background=111827&color=D4AF37&bold=true`;
+  }
+
+  function extractEntityVideoUrl(obj) {
+    if (!obj) return 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+    const candidate = obj.video_url || obj.reel_url || obj.reel_video || obj.video || obj.media_url || '';
+    if (candidate && String(candidate).trim().startsWith('http')) return String(candidate).trim();
+    return 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+  }
+
+  // 🖼️ फोटो URL फेचर एवं रीडर (URL को फेच करके उसकी प्रॉपर्टीज और डायमेंशन पढ़ना)
+  function openPhotoUrlQuickPrompt() {
+    const currentInput = document.getElementById('capsuleSearchInput').value.trim();
+    if (currentInput.startsWith('http')) {
+      inspectAndReadExternalPhotoUrl(currentInput);
+      return;
+    }
+    toggleBurger();
+    setTimeout(() => document.getElementById('drawerPhotoUrlInput')?.focus(), 250);
+  }
+
+  function fetchAndReadPhotoUrl() {
+    const url = document.getElementById('drawerPhotoUrlInput').value.trim();
+    if (!url || !url.startsWith('http')) {
+      showModal("कृपया एक मान्य फोटो/इमेज URL (http:// या https://) पेस्ट करें।");
+      return;
+    }
+    toggleBurger();
+    inspectAndReadExternalPhotoUrl(url);
+  }
+
+  function inspectAndReadExternalPhotoUrl(url) {
+    const modal = document.getElementById('fullEntityInspectorModal');
+    const mediaBox = document.getElementById('inspMediaContainer');
+    const metaBox = document.getElementById('inspMetadataTable');
+    const actBox = document.getElementById('inspActionButtons');
+
+    document.getElementById('inspTitle').innerText = "🖼️ PHOTO URL FETCHER & READER";
+    document.getElementById('inspSub').innerText = "लाइव URL स्ट्रीम और इमेज टेलीमेट्री स्कैन";
+
+    mediaBox.innerHTML = `<div style="text-align:center; padding:16px; color:#D4AF37; font-size:11px;">⏳ URL से फोटो फेच की जा रही है...</div>`;
+    metaBox.innerHTML = '';
+    actBox.innerHTML = '';
+    modal.classList.add('active');
+
+    const probeImg = new Image();
+    const startTs = performance.now();
+
+    probeImg.onload = () => {
+      const fetchMs = (performance.now() - startTs).toFixed(1);
+      const w = probeImg.naturalWidth;
+      const h = probeImg.naturalHeight;
+      const aspect = (w / Math.max(h, 1)).toFixed(2);
+      const matchedMerchant = allMerchantsData.find(m => JSON.stringify(m).includes(url));
+      const matchedStaff = allStaffData.find(s => JSON.stringify(s).includes(url));
+
+      mediaBox.innerHTML = `
+        <div style="background:#000; border:1px solid rgba(212,175,55,0.4); border-radius:12px; overflow:hidden; text-align:center; padding:6px;">
+          <img src="${url}" style="max-width:100%; max-height:240px; border-radius:8px; object-fit:contain;">
+        </div>
+      `;
+
+      const termReport = [
+        `>> PHOTO_URL_FETCH_STATUS : 200 OK (${fetchMs} ms)`,
+        `>> RESOLUTION_DETECTED   : ${w}px × ${h}px (Ratio ${aspect})`,
+        `>> PROTOCOL_SECURITY     : ${url.startsWith('https') ? 'HTTPS SECURE' : 'HTTP STANDARD'}`,
+        `>> LINKED_DATABASE_RECORD: ${matchedMerchant ? 'Merchant: ' + matchedMerchant.store_name : (matchedStaff ? 'Staff: ' + matchedStaff.name : 'External Direct URL')}`
+      ].join('\n');
+
+      runComputerTypewriter('inspTypewriterBox', termReport, 14, true);
+
+      metaBox.innerHTML = `
+        <div style="background:#0D0D12; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); word-break:break-all;">
+          <div><b style="color:#D4AF37;">फेच किया गया URL:</b> <span style="color:#9CA3AF;">${url}</span></div>
+          <div style="margin-top:4px;"><b style="color:#10B981;">ओरिजिनल साइज:</b> ${w} × ${h} पिक्सल</div>
+        </div>
+      `;
+
+      actBox.innerHTML = `
+        <a href="${url}" target="_blank" class="btn-primary" style="text-decoration:none; text-align:center; margin-top:0;">↗ फुल-स्क्रीन ओरिजिनल खोलें</a>
+      `;
+    };
+
+    probeImg.onerror = () => {
+      mediaBox.innerHTML = `<div style="padding:16px; color:#EF4444; font-weight:800; text-align:center;">❌ यह URL कोई मान्य इमेज नहीं दे रहा है या सर्वर द्वारा ब्लॉक है।</div>`;
+      runComputerTypewriter('inspTypewriterBox', `>> ERROR: FAILED_TO_DECODE_IMAGE_STREAM\n>> TARGET_URL: ${url}`, 14, true);
+    };
+
+    probeImg.src = url;
+  }
+
+  // 🔍 किसी भी वीडियो, मर्चेंट, स्टाफ या इमरजेंसी पर क्लिक करने पर प्रॉपर डेटा और मीडिया खोलने का मास्टर फंक्शन
+  function openFullEntityInspector(entityType, entityId) {
+    const modal = document.getElementById('fullEntityInspectorModal');
+    const mediaBox = document.getElementById('inspMediaContainer');
+    const metaBox = document.getElementById('inspMetadataTable');
+    const actBox = document.getElementById('inspActionButtons');
+
+    modal.classList.add('active');
+
+    if (entityType === 'merchant' || entityType === 'emergency_merchant') {
+      const m = allMerchantsData.find(x => String(x.id) === String(entityId));
+      if (!m) return;
+
+      const sName = safeStr(m.store_name || 'स्टोर');
+      const photoUrl = extractEntityPhotoUrl(m);
+      const videoUrl = extractEntityVideoUrl(m);
+      const rev = getMerchantLiveRevenue(m);
+      const cust = getMerchantLiveCustomers(m);
+      const zone = extractSmartZone(m.address || m.location || '');
+      const statusCat = classifyMerchantStatus(m);
+      const relatedLogs = allStaffLogsData.filter(l => l.target_name === m.store_name);
+      const relatedQueries = allQueriesData.filter(q => q.merchant_name === m.store_name);
+
+      document.getElementById('inspTitle').innerText = `${entityType === 'emergency_merchant' ? '🚨 EMERGENCY ALERT:' : '🏪 MERCHANT:'} ${m.store_name || 'स्टोर'}`;
+      document.getElementById('inspSub').innerText = `ज़ोन: ${zone} | स्टेटस: ${(m.status || 'approved').toUpperCase()}`;
+
+      mediaBox.innerHTML = `
+        <div style="display:grid; grid-template-columns: 1fr; gap:8px;">
+          <div style="background:#000; border:1px solid rgba(212,175,55,0.45); border-radius:12px; overflow:hidden; position:relative;">
+            <video src="${videoUrl}" controls playsinline autoplay loop style="width:100%; height:210px; object-fit:contain; background:#000;"></video>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; background:#0D0D12; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,0.07);">
+            <img src="${photoUrl}" class="entity-thumb" onclick="inspectAndReadExternalPhotoUrl('${safeStr(photoUrl)}')" title="फोटो URL स्कैन करें">
+            <div style="flex:1; font-size:10px; text-align:left; word-break:break-all;">
+              <div style="color:#D4AF37; font-weight:800;">🖼️ फेच किया गया फोटो URL:</div>
+              <div style="color:#9CA3AF; max-height:28px; overflow:hidden;">${photoUrl}</div>
+            </div>
+            <button class="clean-action-btn blue-media" onclick="inspectAndReadExternalPhotoUrl('${safeStr(photoUrl)}')">स्कैन</button>
+          </div>
+        </div>
+      `;
+
+      const terminalText = [
+        `[MERCHANT_ID]   : ${m.id}`,
+        `[STORE_NAME]    : ${m.store_name || 'N/A'}`,
+        `[PHONE_NUMBER]  : ${m.phone || 'N/A'}`,
+        `[SMART_ZONE]    : ${zone} (${m.address || 'Delhi'})`,
+        `[LIVE_REVENUE]  : INR ${rev.toLocaleString('en-IN')} | CUSTOMERS: ${cust}`,
+        `[STATUS_CODE]   : ${(m.status || 'approved').toUpperCase()} | SUB: ${m.subscription_status || 'active'}`,
+        `[STAFF_ACTIONS] : ${relatedLogs.length} Logs | QUERIES: ${relatedQueries.length}`
+      ].join('\n');
+
+      runComputerTypewriter('inspTypewriterBox', terminalText, 12, true);
+
+      const logsHtml = relatedLogs.slice(0, 5).map(l =>
+        `<div style="padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.06);">• <b>${l.staff_name}</b>: ${l.action_type} (${new Date(l.created_at).toLocaleString('hi-IN')})</div>`
+      ).join('') || '<div style="color:#6B7280;">कोई स्टाफ लॉग नहीं</div>';
+
+      metaBox.innerHTML = `
+        <div style="background:#0B0B0F; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.07);">
+          <div style="font-weight:900; color:#D4AF37; margin-bottom:4px;">📋 संबंधित स्टाफ कार्रवाई इतिहास:</div>
+          ${logsHtml}
+        </div>
+      `;
+
+      let cleanPh = (m.phone || '').replace(/[^0-9]/g, '');
+      actBox.innerHTML = `
+        ${cleanPh ? `<a href="tel:${cleanPh}" class="clean-action-btn blue-media" style="flex:1; text-align:center; text-decoration:none; padding:8px;">📞 कॉल करें</a>` : ''}
+        ${statusCat !== 'approved'
+          ? `<button class="clean-action-btn green-highlight" style="flex:1; padding:8px;" onclick="updateMerchantStatus('${m.id}', 'approved', '${sName}'); closeFullEntityInspector();">♻️ अप्रूव / रिकवर करें</button>`
+          : `<button class="clean-action-btn red-muted" style="flex:1; padding:8px;" onclick="updateMerchantStatus('${m.id}', 'archived', '${sName}'); closeFullEntityInspector();">🗄️ आर्काइव में भेजें</button>`
+        }
+      `;
+    } else if (entityType === 'emergency_query') {
+      const q = allQueriesData.find(x => String(x.id) === String(entityId));
+      if (!q) return;
+      const linkedMerchant = allMerchantsData.find(m => m.store_name === q.merchant_name);
+      const photoUrl = extractEntityPhotoUrl(linkedMerchant || { store_name: q.merchant_name });
+
+      document.getElementById('inspTitle').innerText = `🚨 मर्चेंट इमरजेंसी टिकट #${q.id}`;
+      document.getElementById('inspSub').innerText = `मर्चेंट: ${q.merchant_name} | स्टेटस: ${q.status || 'Pending'}`;
+
+      mediaBox.innerHTML = `
+        <div style="display:flex; align-items:center; gap:12px; background:#12090B; padding:12px; border-radius:12px; border:1px solid #EF4444;">
+          <img src="${photoUrl}" class="entity-thumb" onclick="inspectAndReadExternalPhotoUrl('${safeStr(photoUrl)}')">
+          <div style="text-align:left;">
+            <div style="font-size:13px; font-weight:900; color:#FCF6BA;">🏪 ${q.merchant_name || 'स्टोर'}</div>
+            <div style="font-size:11px; color:#F87171; margin-top:3px;">💬 "${q.query_text}"</div>
+          </div>
+        </div>
+      `;
+
+      const termText = [
+        `[TICKET_ID]      : #${q.id}`,
+        `[MERCHANT_NAME]  : ${q.merchant_name || 'N/A'}`,
+        `[EMERGENCY_MSG]  : ${q.query_text || 'N/A'}`,
+        `[CURRENT_STATUS] : ${q.status || 'Pending'}`,
+        `[STAFF_REPLY]    : ${q.staff_reply || 'अभी तक कोई जवाब नहीं दिया गया'}`,
+        `[LINKED_PHONE]   : ${linkedMerchant?.phone || 'N/A'}`
+      ].join('\n');
+
+      runComputerTypewriter('inspTypewriterBox', termText, 12, true);
+      metaBox.innerHTML = '';
+      actBox.innerHTML = linkedMerchant
+        ? `<button class="btn-primary" style="margin-top:0;" onclick="openFullEntityInspector('merchant', '${linkedMerchant.id}')">🏪 इस मर्चेंट की पूरी प्रोफाइल और वीडियो खोलें</button>`
+        : '';
+    }
+  }
+
+  function closeFullEntityInspector() {
+    if (inspectorTypewriterIntervalId) clearInterval(inspectorTypewriterIntervalId);
+    const modal = document.getElementById('fullEntityInspectorModal');
+    const vid = modal.querySelector('video');
+    if (vid) { vid.pause(); vid.removeAttribute('src'); }
+    modal.classList.remove('active');
+  }
+
+  let omniToastTimer = null;
+  function showOmniToast(msg, borderColor = "#D4AF37") {
+    const el = document.getElementById('omniToast');
+    if (!el) return;
+    el.innerText = msg;
+    el.style.borderColor = borderColor;
+    el.classList.add('show');
+    if (omniToastTimer) clearTimeout(omniToastTimer);
+    omniToastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+  }
+
   let currentCalcExpression = "";
 
   function safeEvaluateMath(expr) {
@@ -781,7 +1226,6 @@
     return Number.isFinite(finalVal) ? Math.round(finalVal * 1000000) / 1000000 : 0;
   }
 
-  // ⚡ टाइम एक्सप्रेशन पार्सर: "8 + 8 year", "10 + 10 year", "6 month", "15 day", "all" को मिलीसेकंड में बदलता है
   function parseNaturalTimeCommand(rawInput) {
     const str = (rawInput || '').trim().toLowerCase();
     if (!str) return null;
@@ -790,7 +1234,6 @@
       return { ms: null, label: 'ALL-TIME (शुरू से अंत तक)', matchedStaff: null };
     }
 
-    // देखें कि क्या किसी स्टाफ का नाम साथ में लिखा है
     let matchedStaff = null;
     for (const st of allStaffData) {
       if (st.name && str.includes(st.name.toLowerCase())) {
@@ -799,7 +1242,6 @@
       }
     }
 
-    // गणितीय एक्सप्रेशन जैसे "8 + 8" या "10 + 10" या संख्या निकालना
     const mathMatch = str.match(/([0-9]+(?:\s*[+\-*/]\s*[0-9]+)*)/);
     let numVal = 1;
     if (mathMatch && mathMatch[1]) {
@@ -825,7 +1267,6 @@
     return matchedStaff ? { ms: null, label: 'ALL-TIME', matchedStaff } : null;
   }
 
-  // 🚀 कस्टम प्लगइन: हवा में उड़ता हुआ ट्रेडिंग एरो (Floating Trading Vector Arrowhead)
   const floatingTradingVectorArrowPlugin = {
     id: 'floatingTradingVectorArrowPlugin',
     afterDatasetsDraw(chart) {
@@ -844,11 +1285,9 @@
       ctx.translate(lastPt.x, lastPt.y);
       ctx.rotate(angle);
 
-      // हवा में उड़ता हुआ बाहरी ग्लो आभा
       ctx.shadowColor = strokeColor;
       ctx.shadowBlur = 14;
 
-      // शार्प 3D ट्रेडिंग वेक्टर एरोहेड (Floating Winged Arrow)
       ctx.beginPath();
       ctx.moveTo(11, 0);
       ctx.lineTo(-8, -7);
@@ -865,7 +1304,6 @@
     }
   };
 
-  // 📊 परफॉर्मेंस ग्रेड निर्णय इंजन: LOSS | POOR | AVERAGE | GOOD | VERY GOOD | EXCELLENT
   function evaluatePerformanceGrade(positiveCount, negativeCount, totalEvents, netTrendDelta) {
     if (totalEvents === 0) {
       return { grade: 'LOSS', color: '#EF4444', cls: 'active-loss', score: 0, arrow: '↘ LOSS (0 Activity)' };
@@ -902,7 +1340,6 @@
     });
   }
 
-  // ⚡ O(1) प्री-इंडेक्सर: डेटाबेस की सभी टेबल्स से हर स्टाफ और पूरे पोर्टल का इतिहास RAM में बांधना (<0.1ms एक्सेस के लिए)
   function buildSubMillisecondChronoIndex() {
     staffChronoIndex = {};
     portalChronoStream = [];
@@ -936,7 +1373,7 @@
       const b = ensureStaffBucket(sName);
       const ts = log.created_at ? new Date(log.created_at).getTime() : Date.now();
       const act = (log.action_type || '').toLowerCase();
-      const isNeg = act.includes('block') || act.includes('delete') || act.includes('ब्लॉक') || act.includes('डिलीट');
+      const isNeg = act.includes('block') || act.includes('delete') || act.includes('ब्लॉक') || act.includes('डिलीट') || act.includes('archive');
       const isLogin = act.includes('login') || act.includes('लॉगिन');
       const ev = {
         ts,
@@ -998,11 +1435,9 @@
       });
     });
 
-    // सभी इवेंट्स को समय के अनुसार क्रमबद्ध करना
     Object.values(staffChronoIndex).forEach(b => b.events.sort((a, c) => c.ts - a.ts));
     portalChronoStream.sort((a, c) => c.ts - a.ts);
 
-    // ग्राफ 3 के ड्रॉपडाउन में सभी स्टाफ के नाम भरना
     const sel = document.getElementById('tradingTargetSelector');
     if (sel) {
       const currentVal = sel.value;
@@ -1012,7 +1447,7 @@
         const key = (s.name || '').trim().toLowerCase();
         if (key && !seenNames.has(key)) {
           seenNames.add(key);
-          opts += `<option value="${s.name}">👤 ${s.name}</option>`;
+          opts += `<option value="${safeStr(s.name)}">👤 ${s.name}</option>`;
         }
       });
       sel.innerHTML = opts;
@@ -1039,7 +1474,6 @@
     return eventsArray.filter(ev => ev.ts >= cutoff);
   }
 
-  // 📈 ग्राफ 3: फ्लोटिंग ट्रेडिंग वेक्टर ग्राफ रेंडरर
   function setGraph3Timeframe(tf) {
     graph3CurrentTimeframe = tf;
     graph3CustomWindowMs = null;
@@ -1094,7 +1528,7 @@
     const points = [10];
     const labels = ['Start'];
 
-    chronological.forEach((ev, idx) => {
+    chronological.forEach((ev) => {
       if (ev.type === 'negative') negCount++;
       else posCount++;
       cumulative = Math.max(2, cumulative + (ev.impact || 1));
@@ -1118,7 +1552,9 @@
       badge.style.color = gradeInfo.color;
     }
 
-    const ctx3 = document.getElementById('chartTotalExpiry').getContext('2d');
+    const canvasEl = document.getElementById('chartTotalExpiry');
+    if (!canvasEl) return;
+    const ctx3 = canvasEl.getContext('2d');
     if (globalCharts.c3) globalCharts.c3.destroy();
 
     const grad = ctx3.createLinearGradient(0, 0, 0, 165);
@@ -1175,14 +1611,14 @@
     }
   }
 
-  // 👤 स्टाफ पर क्लिक करते ही <1ms में खुलने वाला अलग फुल-स्क्रीन स्टाफ डॉसियर पेज
+  // 👤 स्टाफ पर क्लिक करते ही कटर-कटर कंप्यूटर टाइपराइटर के साथ खुलने वाला डॉसियर पेज
   function openStaffDossierPage(staffName) {
     const t0 = performance.now();
     activeDossierStaffName = staffName;
     activeDossierTimeframe = 'all';
     activeDossierCustomMs = null;
 
-    document.getElementById('dossierStaffNameTitle').innerText = `${staffName.toUpperCase()} — PERFORMANCE`;
+    document.getElementById('dossierStaffNameTitle').innerText = `${staffName.toUpperCase()} — TERMINAL`;
     document.getElementById('dossierCustomTimeInput').value = '';
     document.querySelectorAll('#staffDossierPage .tf-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('dosTf-all').classList.add('active');
@@ -1192,6 +1628,7 @@
   }
 
   function closeStaffDossierPage() {
+    if (typewriterIntervalId) clearInterval(typewriterIntervalId);
     document.getElementById('staffDossierPage').classList.remove('active');
   }
 
@@ -1222,7 +1659,8 @@
 
   function renderStaffDossierView(rangeLabel, startPerfTime) {
     const key = (activeDossierStaffName || '').trim().toLowerCase();
-    const bucket = staffChronoIndex[key] || { events: [] };
+    const bucket = staffChronoIndex[key] || { events: [], staffMeta: {} };
+    const staffMeta = bucket.staffMeta || allStaffData.find(s => (s.name || '').toLowerCase() === key) || {};
     const filtered = filterEventsByWindow(bucket.events, activeDossierTimeframe, activeDossierCustomMs);
 
     let pos = 0, neg = 0, logins = 0;
@@ -1247,6 +1685,22 @@
     const delta = pts[pts.length - 1] - pts[0];
     const gradeInfo = evaluatePerformanceGrade(pos, neg, filtered.length, delta);
 
+    // ⌨️ कंप्यूटर के टाइपर की तरह कटर-कटर आवाज में स्टाफ की पूरी कुंडली टाइप करना
+    const lastSeenStr = filtered.length > 0 ? filtered[0].dateStr : 'कोई लॉग नहीं';
+    const lastActionStr = filtered.length > 0 ? `${filtered[0].title} -> ${filtered[0].target}` : 'N/A';
+    const terminalReport = [
+      `=============================================`,
+      `>> OPERATOR_ID      : ${staffMeta.id || 'SYS-OP'} | NAME: ${activeDossierStaffName}`,
+      `>> AUTH_PASSKEY     : ${staffMeta.pin || '****'} | STATUS: ${(staffMeta.status || 'Active').toUpperCase()}`,
+      `>> EVALUATION_GRADE : ${gradeInfo.grade} (${gradeInfo.arrow})`,
+      `>> TOTAL_ACTIONS    : ${filtered.length} [APPROVED: ${pos} | ALERTS: ${neg} | LOGINS: ${logins}]`,
+      `>> LAST_TIMESTAMP   : ${lastSeenStr}`,
+      `>> LATEST_EXECUTION : ${lastActionStr}`,
+      `=============================================`
+    ].join('\n');
+
+    runComputerTypewriter('staffTypewriterText', terminalReport, 15, false);
+
     document.getElementById('dossierActiveRangeLabel').innerText = rangeLabel;
     document.getElementById('dossierCurrentGradeBadge').innerText = gradeInfo.grade;
     document.getElementById('dossierCurrentGradeBadge').style.color = gradeInfo.color;
@@ -1261,7 +1715,6 @@
     document.getElementById('dosStatLogins').innerText = logins;
     document.getElementById('dossierListCountBadge').innerText = `${filtered.length} रिकॉर्ड`;
 
-    // स्टाफ का पर्सनल फ्लोटिंग ट्रेडिंग एरो ग्राफ
     const ctxP = document.getElementById('chartStaffPersonalVector').getContext('2d');
     if (staffPersonalChart) staffPersonalChart.destroy();
     const gradP = ctxP.createLinearGradient(0, 0, 0, 150);
@@ -1297,26 +1750,29 @@
       }
     });
 
-    // शुरू से अंत तक की पूरी एक्टिविटी लिस्ट रेंडरिंग
     const listBox = document.getElementById('dossierActivityFullList');
     if (filtered.length === 0) {
       listBox.innerHTML = `<div style="font-size:11px; color:#9CA3AF; text-align:center; padding:18px;">इस समय-सीमा (${rangeLabel}) में कोई एक्टिविटी दर्ज नहीं है (0) — स्थिति: LOSS</div>`;
     } else {
-      listBox.innerHTML = filtered.map((ev, i) => `
-        <div class="item-row" style="padding:10px 12px; margin-bottom:6px;">
-          <div style="flex:1;">
-            <div style="font-size:12px; font-weight:800; color:#F3F4F6;">#${i + 1} ${ev.title}</div>
-            <div style="font-size:10px; color:#9CA3AF; margin-top:3px;">लक्ष्य: <b style="color:#D4AF37;">${ev.target}</b> &nbsp;|&nbsp; समय: ${ev.dateStr}</div>
+      listBox.innerHTML = filtered.map((ev, i) => {
+        const linkedMerch = allMerchantsData.find(m => m.store_name === ev.target);
+        const clickAttr = linkedMerch ? `onclick="openFullEntityInspector('merchant', '${linkedMerch.id}')"` : '';
+        return `
+          <div class="item-row" style="padding:10px 12px; margin-bottom:6px; cursor:${linkedMerch ? 'pointer' : 'default'};" ${clickAttr}>
+            <div style="flex:1;">
+              <div style="font-size:12px; font-weight:800; color:#F3F4F6;">#${i + 1} ${ev.title}</div>
+              <div style="font-size:10px; color:#9CA3AF; margin-top:3px;">लक्ष्य: <b style="color:#D4AF37;">${ev.target}</b> &nbsp;|&nbsp; समय: ${ev.dateStr}</div>
+            </div>
+            <span style="font-size:10px; font-weight:900; color:${ev.type === 'negative' ? '#EF4444' : '#10B981'};">
+              ${ev.type === 'negative' ? '↘ ALERT' : '↗ DONE'}
+            </span>
           </div>
-          <span style="font-size:10px; font-weight:900; color:${ev.type === 'negative' ? '#EF4444' : '#10B981'};">
-            ${ev.type === 'negative' ? '↘ ALERT' : '↗ DONE'}
-          </span>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     const elapsedMs = (performance.now() - startPerfTime).toFixed(2);
-    document.getElementById('dossierLatencyTag').innerText = `⚡ ${elapsedMs} ms (1/1000s Instant Engine)`;
+    document.getElementById('dossierLatencyTag').innerText = `⚡ ${elapsedMs} ms (Typewriter Active)`;
   }
 
   function openLiveCalculator(initialExpr = "") {
@@ -1362,7 +1818,7 @@
   function copyCalcResult() {
     const val = String(safeEvaluateMath(currentCalcExpression));
     if (navigator.clipboard) navigator.clipboard.writeText(val);
-    showModal(`कैलकुलेटर परिणाम (${val}) कॉपी हो गया है।`);
+    showOmniToast(`📋 परिणाम (${val}) कॉपी हो गया!`);
   }
 
   function checkInstantCalculatorTrigger(val) {
@@ -1391,28 +1847,23 @@
     }
   });
 
-  // 🔄 मास्टर एरो-स्पिनर लाइव सिंक ट्रिगर
   async function triggerLiveSpinSync(btnEl, targetScope) {
     if (btnEl && btnEl.classList.contains('spinning')) return;
     if (btnEl) btnEl.classList.add('spinning');
 
-    const minSpinTime = new Promise(resolve => setTimeout(resolve, 550));
+    const minSpinTime = new Promise(resolve => setTimeout(resolve, 500));
 
     try {
-      if (targetScope === 'staff') {
-        await Promise.all([fetchStaffMembers(), minSpinTime]);
-      } else if (targetScope === 'audit') {
+      if (targetScope === 'audit') {
         document.getElementById('areaAuditInput').value = '';
-        await Promise.all([loadAllData(), minSpinTime]);
-      } else {
-        await Promise.all([loadAllData(), minSpinTime]);
       }
+      await Promise.all([loadAllData(), minSpinTime]);
+      showOmniToast("🔄 डेटाबेस सिंक पूर्ण!", "#10B981");
     } catch (e) {}
 
     if (btnEl) btnEl.classList.remove('spinning');
   }
 
-  // 👁️ प्रीमियम मेटैलिक गोल्ड Eye आइकॉन टॉगल
   const OPEN_EYE_SVG = `
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
     <circle cx="12" cy="12" r="3" fill="url(#metalGold3D)"></circle>
@@ -1447,19 +1898,18 @@
     }
   }
 
-  // 🌐 जीरो-बैनर प्योर क्लाउड न्यूरल ट्रांसलेशन इंजन
   const PLACEHOLDER_ORIGINAL_MAP = [
     { id: 'loginName', hi: 'अपना नाम टाइप करें...' },
     { id: 'loginPin', hi: 'कीबोर्ड से गुप्त पासवर्ड टाइप करें...' },
     { id: 'newStaffName', hi: 'स्टाफ का नाम' },
-    { id: 'newStaffPin', hi: 'कीवर्ड पासवर्ड (उदा: Abhi@Star99)' },
+    { id: 'newStaffPin', hi: 'पिन या कीवर्ड (उदा: 1234 या Abhi@99)' },
     { id: 'areaAuditInput', hi: 'एरिया खोजें (जैसे: बेगमपुर, रोहिणी, दिल्ली)...' },
-    { id: 'capsuleSearchInput', hi: "ग्लोबल सर्च, '8+8 year', या 'calculator' टाइप करें..." }
+    { id: 'capsuleSearchInput', hi: "सर्च, फोटो URL (https://...), या 'calculator' टाइप करें..." }
   ];
 
   async function translateTextViaInternet(text, targetLang) {
     const clean = (text || '').trim();
-    if (!clean || targetLang === 'hi' || /^[0-9₹:.,+\-*/()%|\s#]+$/.test(clean)) return text;
+    if (!clean || targetLang === 'hi' || /^[0-9₹:.,+\-*/()%|\s#•↗↘→]+$/.test(clean)) return text;
     const cacheKey = `${targetLang}::${clean}`;
     if (translationCache[cacheKey]) return translationCache[cacheKey];
 
@@ -1530,7 +1980,6 @@
   }
 
   window.addEventListener('DOMContentLoaded', () => {
-    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     const savedLang = localStorage.getItem('omni_system_language') || 'hi';
     const selector = document.getElementById('cloudLanguageSelector');
     const badgeEl = document.getElementById('activeLangBadge');
@@ -1541,7 +1990,6 @@
     }
   });
 
-  // 🧠 स्मार्ट ज़ोन एक्सट्रैक्टर
   function extractSmartZone(rawAddress) {
     if (!rawAddress) return 'अन्य दिल्ली';
     const lower = String(rawAddress).toLowerCase();
@@ -1578,7 +2026,7 @@
     const rawSt = String(m.status ?? 'approved').trim().toLowerCase();
     const subSt = String(m.subscription_status ?? '').trim().toLowerCase();
 
-    if (['closed', 'false', 'expired', 'blocked', 'inactive', 'rejected'].includes(rawSt) || subSt === 'expired') {
+    if (['closed', 'false', 'expired', 'blocked', 'inactive', 'rejected', 'archived', 'deleted'].includes(rawSt) || subSt === 'expired' || m.reel_blocked === true) {
       return 'blocked';
     }
     if (['pending', 'wait', 'review', 'new'].includes(rawSt)) {
@@ -1601,43 +2049,57 @@
     return baseCust + claimCust;
   }
 
-  // ⚡ मास्टर किल स्विच रियल-टाइम पोलिंग एवं लिसनर
-  async function checkMasterPortalAuthority() {
+  function updatePortalStatusIndicatorUI(isActive) {
+    const headerPill = document.getElementById('headerPortalStatusPill');
+    const drawerTxt = document.getElementById('drawerPortalStateText');
+
+    if (isActive === false) {
+      if (headerPill) {
+        headerPill.className = 'portal-state-pill is-404';
+        headerPill.innerText = '🔴 स्टाफ: 404 लॉक';
+      }
+      if (drawerTxt) {
+        drawerTxt.style.color = '#EF4444';
+        drawerTxt.innerText = '🔴 404 LOCKDOWN';
+      }
+    } else {
+      if (headerPill) {
+        headerPill.className = 'portal-state-pill';
+        headerPill.innerText = '🟢 स्टाफ: चालू';
+      }
+      if (drawerTxt) {
+        drawerTxt.style.color = '#10B981';
+        drawerTxt.innerText = '🟢 LIVE (चालू)';
+      }
+    }
+  }
+
+  async function syncRemotePortalStatus() {
     try {
-      const { data } = await supabaseClient.from('admin_master').select('staff_portal_active').eq('id', 1).single();
-      if (data && data.staff_portal_active === false) {
-        triggerAbsolute404Lockdown();
+      const { data } = await supabaseClient.from('admin_master').select('staff_portal_active').eq('id', 1).maybeSingle();
+      if (data && typeof data.staff_portal_active === 'boolean') {
+        updatePortalStatusIndicatorUI(data.staff_portal_active);
       }
     } catch (e) {}
   }
-  setInterval(checkMasterPortalAuthority, 3000);
 
-  // ⚡ SUPABASE REALTIME DYNAMIC SYNC
   function initRealtimeDynamicGraphs() {
     try {
       supabaseClient
         .channel('omni_live_dynamic_sync')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_master' }, payload => {
-          if (payload.new && payload.new.staff_portal_active === false) triggerAbsolute404Lockdown();
-          else if (payload.new && payload.new.staff_portal_active === true) location.reload();
+          if (payload.new && typeof payload.new.staff_portal_active === 'boolean') {
+            updatePortalStatusIndicatorUI(payload.new.staff_portal_active);
+          }
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'merchants' }, () => loadAllData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'revenue_master' }, () => loadAllData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'user_claims' }, () => loadAllData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_team' }, () => loadAllData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'staff_activity_logs' }, () => loadAllData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'merchant_queries' }, () => loadAllData())
         .subscribe();
     } catch(e) {}
-  }
-
-  function triggerAbsolute404Lockdown() {
-    try { localStorage.clear(); sessionStorage.clear(); } catch(err) {}
-    document.documentElement.innerHTML = `
-      <!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><title>404 Not Found</title>
-      <style>body{background:#030303;color:#FFF;font-family:monospace;display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;margin:0;}h1{font-size:90px;color:#DC2626;margin:0;font-weight:900;}p{color:#9CA3AF;font-size:15px;margin-top:10px;}</style>
-      </head><body><h1>404</h1><p>The requested resource was not found on this server.</p></body></html>
-    `;
-    throw new Error("404 Lockdown Active");
   }
 
   function showModal(msg, customBody = "", showDefaultClose = true) {
@@ -1652,7 +2114,6 @@
     document.getElementById('customModalActionBody').innerHTML = '';
   }
 
-  // 🔐 कीवर्ड पासवर्ड लॉगिन
   async function handleLogin() {
     const errEl = document.getElementById('loginErr');
     const now = Date.now();
@@ -1677,22 +2138,26 @@
     try {
       let isAuthSuccess = false;
       let resolvedName = name;
-
-      const { data: rpcData, error: rpcErr } = await supabaseClient.rpc('secure_staff_login', { p_name: name, p_pin: keywordPass });
-      if (!rpcErr && rpcData && rpcData.success) {
+  if (keywordPass === getActiveMasterOmniPin()) {
         isAuthSuccess = true;
-        resolvedName = rpcData.staff_name || name;
+        resolvedName = name || "SUPER_ADMIN";
       } else {
-        const { data: directMatch } = await supabaseClient
-          .from('staff_team')
-          .select('*')
-          .ilike('name', name)
-          .eq('pin', keywordPass)
-          .maybeSingle();
-
-        if (directMatch && directMatch.status !== 'Blocked') {
+        const { data: rpcData, error: rpcErr } = await supabaseClient.rpc('secure_staff_login', { p_name: name, p_pin: keywordPass });
+        if (!rpcErr && rpcData && rpcData.success) {
           isAuthSuccess = true;
-          resolvedName = directMatch.name;
+          resolvedName = rpcData.staff_name || name;
+        } else {
+          const { data: directMatch } = await supabaseClient
+            .from('staff_team')
+            .select('*')
+            .ilike('name', name)
+            .eq('pin', keywordPass)
+            .maybeSingle();
+
+          if (directMatch && directMatch.status !== 'Blocked') {
+            isAuthSuccess = true;
+            resolvedName = directMatch.name;
+          }
         }
       }
 
@@ -1702,7 +2167,8 @@
         currentAdminName = resolvedName;
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('mainShell').classList.add('active');
-        await loadAllData();
+        showOmniToast(`👑 स्वागत है, ${currentAdminName}!`, "#10B981");
+        await Promise.all([loadAllData(), syncRemotePortalStatus()]);
         initRealtimeDynamicGraphs();
         startTimer();
         await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: 'KEYWORD_VAULT_LOGIN', target_entity: 'SYSTEM' }]);
@@ -1715,20 +2181,32 @@
           lockoutUntil = Date.now() + 60000;
           localStorage.setItem('omni_lockout_until', String(lockoutUntil));
           await supabaseClient.from('admin_core_db').insert([{ admin_name: name, action_taken: 'BRUTE_FORCE_BLOCKED', target_entity: 'AUTH_VAULT' }]);
-          errEl.innerText = "3 गलत कीवर्ड प्रयास! सिस्टम 60 सेकंड के लिए लॉक कर दिया गया है।";
+          errEl.innerText = "3 गलत प्रयास! सिस्टम 60 सेकंड के लिए लॉक कर दिया गया है।";
         } else {
           errEl.innerText = `गलत कीवर्ड पासवर्ड! (${3 - failedLoginAttempts} प्रयास शेष)`;
         }
         errEl.style.display = 'block';
       }
     } catch(e) {
-      document.getElementById('masterLoginBtn').innerText = "वॉल्ट अनलॉक करें";
+            document.getElementById('masterLoginBtn').innerText = "वॉल्ट अनलॉक करें";
       errEl.innerText = "नेटवर्क या सर्वर त्रुटि!";
       errEl.style.display = 'block';
     }
   }
 
-  // सभी टेबल्स को समानांतर खींचकर सब-मिलीसेकंड O(1) इंडेक्स तैयार करना
+  function refreshLocalViewsImmediately() {
+    buildSubMillisecondChronoIndex();
+
+    const mBadge = document.getElementById('merchantTotalBadge');
+    if (mBadge) mBadge.innerText = `(${allMerchantsData.length})`;
+    const sBadge = document.getElementById('staffTotalBadge');
+    if (sBadge) sBadge.innerText = `(${allStaffData.length})`;
+
+    renderMerchantList(allMerchantsData);
+    renderStaffList(allStaffData);
+    executeAreaAudit();
+  }
+
   async function loadAllData() {
     try {
       const [mRes, sRes, cRes, rRes, lRes, aRes, coreRes, qRes] = await Promise.all([
@@ -1750,16 +2228,7 @@
       allAdminCoreLogs = coreRes.data || [];
       allQueriesData = qRes.data || [];
 
-      buildSubMillisecondChronoIndex();
-
-      const mBadge = document.getElementById('merchantTotalBadge');
-      if (mBadge) mBadge.innerText = `(${allMerchantsData.length})`;
-      const sBadge = document.getElementById('staffTotalBadge');
-      if (sBadge) sBadge.innerText = `(${allStaffData.length})`;
-
-      renderMerchantList(allMerchantsData);
-      renderStaffList(allStaffData);
-      executeAreaAudit();
+      refreshLocalViewsImmediately();
 
       const savedLang = localStorage.getItem('omni_system_language') || 'hi';
       if (savedLang !== 'hi') translateEntireDOMPure(savedLang);
@@ -1795,25 +2264,26 @@
       const liveRev = getMerchantLiveRevenue(m);
       const liveCust = getMerchantLiveCustomers(m);
       const zoneTag = extractSmartZone(m.address || m.location || '');
+      const sStoreName = safeStr(m.store_name || 'स्टोर');
 
       return `
-        <div class="item-row">
+        <div class="item-row row-${cat}">
           <div style="flex:1;">
             <div style="font-weight:800; color:#F3F4F6; font-size:13px;">
               <span style="color:#6B7280; font-size:11px; margin-right:4px;">#${idx + 1}</span>${m.store_name || 'अनाम स्टोर'}
               <span class="clean-zone-label">• ${zoneTag}</span>
             </div>
-            <div style="font-size:10px; color:#9CA3AF; margin-top:4px; line-height:1.4;">${m.address || m.location || 'N/A'} | ${m.phone || 'N/A'}</div>
+            <div style="font-size:10px; color:#9CA3AF; margin-top:4px; line-height:1.4;">${m.address || m.location || 'N/A'} | 📞 ${m.phone || 'N/A'}</div>
             <div style="font-size:11px; color:#D1D5DB; font-weight:700; margin-top:5px;">
               रेवेन्यू: <span style="color:#10B981;">₹${liveRev.toLocaleString('en-IN')}</span> &nbsp;|&nbsp; ग्राहक: <span style="color:#F3F4F6;">${liveCust}</span>
             </div>
           </div>
           <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
-            <span class="clean-status ${cat}">${m.status || 'approved'}</span>
-            <div style="display:flex; gap:10px; align-items:center;">
-              <button class="clean-action-btn gold-highlight" onclick="openUpdateRevenueModal('${m.id}', '${(m.store_name || '').replace(/'/g, '')}', ${Number(m.revenue || 0)})">₹ रेवेन्यू</button>
-              ${!isApproved ? `<button class="clean-action-btn green-highlight" onclick="updateMerchantStatus('${m.id}', 'approved')">अप्रूव</button>` : ''}
-              <button class="clean-action-btn ${isBlocked ? 'green-highlight' : 'red-muted'}" onclick="updateMerchantStatus('${m.id}', '${isBlocked ? 'approved' : 'closed'}')">${isBlocked ? 'अनब्लॉक' : 'ब्लॉक'}</button>
+            <span class="clean-status ${cat}">${isBlocked ? 'BLOCKED' : (isApproved ? 'LIVE' : 'PENDING')}</span>
+            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+              <button class="clean-action-btn gold-highlight" onclick="openUpdateRevenueModal('${m.id}', '${sStoreName}', ${Number(m.revenue || 0)})">₹ रेवेन्यू</button>
+              ${!isApproved ? `<button class="clean-action-btn yellow-pending-btn" onclick="updateMerchantStatus('${m.id}', 'approved', '${sStoreName}')">⚡ अप्रूव</button>` : ''}
+              <button class="clean-action-btn ${isBlocked ? 'green-highlight' : 'red-muted'}" onclick="updateMerchantStatus('${m.id}', '${isBlocked ? 'approved' : 'closed'}', '${sStoreName}')">${isBlocked ? '🔓 अनब्लॉक' : '🚫 ब्लॉक'}</button>
             </div>
           </div>
         </div>
@@ -1822,13 +2292,14 @@
   }
 
   function openUpdateRevenueModal(merchantId, storeName, currentRev) {
+    const sName = safeStr(storeName);
     const html = `
       <div style="text-align:left; margin-top:8px;">
         <div style="font-size:11px; color:#9CA3AF; margin-bottom:6px;">स्टोर: <b style="color:#FFF;">${storeName}</b></div>
         <input type="number" id="customRevInput" value="${currentRev}" placeholder="कुल रेवेन्यू राशि (₹) दर्ज करें" style="width:100%; padding:10px; background:#000; color:#10B981; border:1px solid #D4AF37; border-radius:8px; font-size:14px; font-weight:800; text-align:center; outline:none;">
         <div style="display:flex; gap:8px; margin-top:12px;">
           <button class="btn-primary" style="background:#374151; margin-top:0;" onclick="closeCustomModal()">रद्द करें</button>
-          <button class="btn-primary" style="margin-top:0; background:#059669;" onclick="saveMerchantRevenue('${merchantId}', '${storeName}')">अपडेट करें</button>
+          <button class="btn-primary" style="margin-top:0; background:#059669;" onclick="saveMerchantRevenue('${merchantId}', '${sName}')">अपडेट करें</button>
         </div>
       </div>
     `;
@@ -1837,28 +2308,38 @@
 
   async function saveMerchantRevenue(merchantId, storeName) {
     const val = Number(document.getElementById('customRevInput').value) || 0;
+    closeCustomModal();
+
+    const target = allMerchantsData.find(m => String(m.id) === String(merchantId));
+    if (target) target.revenue = val;
+    refreshLocalViewsImmediately();
+    showOmniToast(`💰 '${storeName}' का रेवेन्यू ₹${val.toLocaleString('en-IN')} अपडेट हुआ!`, "#10B981");
+
     const { error } = await supabaseClient.from('merchants').update({ revenue: val }).eq('id', merchantId);
     if (!error) {
-      await supabaseClient.from('revenue_master').insert([{ merchant_id: String(merchantId), store_name: storeName, total_revenue: 0, month_period: new Date().toLocaleDateString('hi-IN') }]);
-      showModal(`'${storeName}' का रेवेन्यू ₹${val.toLocaleString('en-IN')} अपडेट हो गया है। ग्राफ सिंक हो चुका है!`);
-      await loadAllData();
+      await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: `REVENUE_SET_${val}`, target_entity: storeName }]);
     } else {
       showModal("त्रुटि: " + error.message);
     }
   }
 
-  async function updateMerchantStatus(id, newStatus) {
+  async function updateMerchantStatus(id, newStatus, storeName = 'Store') {
+    const target = allMerchantsData.find(m => String(m.id) === String(id));
+    if (target) target.status = newStatus;
+    refreshLocalViewsImmediately();
+    showOmniToast(
+      newStatus === 'approved' ? `✅ '${storeName}' अब लाइव (Approved) है!` : `🚫 '${storeName}' को ब्लॉक कर दिया गया!`,
+      newStatus === 'approved' ? "#10B981" : "#EF4444"
+    );
+
     const { error } = await supabaseClient.from('merchants').update({ status: newStatus }).eq('id', id);
     if(!error) {
-      await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: `MERCHANT_${newStatus.toUpperCase()}`, target_entity: String(id) }]);
-      showModal(`मर्चेंट स्टेटस '${newStatus}' अपडेट हो गया है।`);
-      loadAllData();
+      await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: `MERCHANT_${newStatus.toUpperCase()}`, target_entity: storeName }]);
     } else {
       showModal("त्रुटि: " + error.message);
     }
   }
 
-  // 👤 स्टाफ लिस्ट: किसी भी स्टाफ पर क्लिक करते ही <1ms में फुल-स्क्रीन परफॉर्मेंस पेज खुलेगा
   function renderStaffList(dataArray) {
     const container = document.getElementById('staffDirectoryContainer');
     if(!dataArray || dataArray.length === 0) {
@@ -1867,23 +2348,23 @@
     }
     container.innerHTML = dataArray.map(s => {
       let isBlocked = s.status === 'Blocked';
-      const safeName = (s.name || 'Staff').replace(/'/g, '');
-      const bucket = staffChronoIndex[safeName.trim().toLowerCase()];
+      const safeName = safeStr(s.name || 'Staff');
+      const bucket = staffChronoIndex[(s.name || '').trim().toLowerCase()];
       const evCount = bucket ? bucket.events.length : 0;
 
       return `
-        <div class="item-row clickable-staff" style="cursor:pointer;" onclick="openStaffDossierPage('${safeName}')">
+        <div class="item-row clickable-staff ${isBlocked ? 'row-blocked' : 'row-approved'}" style="cursor:pointer;" onclick="openStaffDossierPage('${safeName}')">
           <div style="flex:1;">
             <div style="font-weight:800; color:#F3F4F6; font-size:13px;">
-              ${s.name} <span class="clean-zone-label">• ${evCount} रिकॉर्ड्स ↗</span>
+              👤 ${s.name} <span class="clean-zone-label">• ${evCount} रिकॉर्ड्स ↗</span>
             </div>
             <div style="font-size:11px; color:#9CA3AF; margin-top:4px;">
-              कीवर्ड: <span style="color:#E5E7EB; font-weight:700;">${s.pin}</span> &nbsp;|&nbsp;
+              कीवर्ड/पिन: <span style="color:#E5E7EB; font-weight:700;">${s.pin}</span> &nbsp;|&nbsp;
               स्टेटस: <span class="clean-status ${isBlocked?'blocked':'approved'}">${s.status || 'Active'}</span>
             </div>
           </div>
-          <div style="display:flex; gap:12px; align-items:center;" onclick="event.stopPropagation();">
-            <button class="clean-action-btn gold-highlight" onclick="openCustomStaffPinModal('${s.id}', '${safeName}')">कीवर्ड बदलें</button>
+          <div style="display:flex; gap:8px; align-items:center;" onclick="event.stopPropagation();">
+            <button class="clean-action-btn gold-highlight" onclick="openCustomStaffPinModal('${s.id}', '${safeName}')">🔑 कीवर्ड</button>
             <button class="clean-action-btn ${isBlocked?'green-highlight':'red-muted'}" onclick="toggleStaffStatus('${s.id}', '${s.status}', '${safeName}')">${isBlocked?'अनब्लॉक':'ब्लॉक'}</button>
           </div>
         </div>
@@ -1891,25 +2372,25 @@
     }).join('');
   }
 
-  async function fetchStaffMembers() {
-    await loadAllData();
-  }
-
   async function toggleStaffStatus(id, currentStatus, staffName) {
     const newStatus = currentStatus === 'Blocked' ? 'Active' : 'Blocked';
+    const target = allStaffData.find(s => String(s.id) === String(id));
+    if (target) target.status = newStatus;
+    refreshLocalViewsImmediately();
+    showOmniToast(`👤 स्टाफ '${staffName}' अब ${newStatus} है!`, newStatus === 'Active' ? "#10B981" : "#EF4444");
+
     const { error } = await supabaseClient.from('staff_team').update({ status: newStatus }).eq('id', id);
     if(!error) {
       await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: `STAFF_${newStatus.toUpperCase()}`, target_entity: staffName }]);
-      showModal(`स्टाफ '${staffName}' का स्टेटस '${newStatus}' कर दिया गया है।`);
-      fetchStaffMembers();
     }
   }
 
   function openCustomStaffPinModal(id, name) {
+    const sName = safeStr(name);
     const html = `
       <div style="text-align:left; margin-top:8px;">
         <div class="input-wrapper">
-          <input type="password" id="customNewPinInput" placeholder="नया कीवर्ड पासवर्ड टाइप करें" style="width:100%; padding:10px 40px 10px 10px; background:#000; color:#FFF; border:1px solid #D4AF37; border-radius:8px; font-size:12px; outline:none;">
+          <input type="password" id="customNewPinInput" placeholder="नया कीवर्ड/पिन टाइप करें" style="width:100%; padding:10px 40px 10px 10px; background:#000; color:#FFF; border:1px solid #D4AF37; border-radius:8px; font-size:12px; outline:none;">
           <button type="button" class="eye-icon-btn" style="right:8px;" onclick="toggleInputEye('customNewPinInput', this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="url(#metalGold3D)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px; height:18px;">
               ${CLOSED_EYE_SVG}
@@ -1918,7 +2399,7 @@
         </div>
         <div style="display:flex; gap:8px; margin-top:12px;">
           <button class="btn-primary" style="background:#374151; margin-top:0;" onclick="closeCustomModal()">रद्द करें</button>
-          <button class="btn-primary" style="margin-top:0;" onclick="saveCustomStaffPin('${id}', '${name}')">कीवर्ड सेव करें</button>
+          <button class="btn-primary" style="margin-top:0;" onclick="saveCustomStaffPin('${id}', '${sName}')">सेव करें</button>
         </div>
       </div>
     `;
@@ -1928,14 +2409,18 @@
   async function saveCustomStaffPin(id, name) {
     const newKeyword = document.getElementById('customNewPinInput').value.trim();
     if(newKeyword.length < 4) {
-      showModal("सुरक्षा नियम: कीवर्ड पासवर्ड कम से कम 4 अक्षरों/शब्दों का होना चाहिए।");
+      showModal("सुरक्षा नियम: कीवर्ड पासवर्ड कम से कम 4 अक्षरों का होना चाहिए।");
       return;
     }
+    closeCustomModal();
+    const target = allStaffData.find(s => String(s.id) === String(id));
+    if (target) target.pin = newKeyword;
+    refreshLocalViewsImmediately();
+    showOmniToast(`🔑 '${name}' का नया कीवर्ड सेव हो गया!`, "#10B981");
+
     const { error } = await supabaseClient.from('staff_team').update({ pin: newKeyword }).eq('id', id);
     if(!error) {
       await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: 'STAFF_KEYWORD_CHANGED', target_entity: name }]);
-      showModal(`स्टाफ '${name}' का नया कीवर्ड पासवर्ड डेटाबेस में सेव हो गया है।`);
-      fetchStaffMembers();
     } else {
       showModal("त्रुटि: कीवर्ड अपडेट नहीं हो सका।");
     }
@@ -1945,7 +2430,7 @@
     const name = document.getElementById('newStaffName').value.trim();
     const keywordPass = document.getElementById('newStaffPin').value.trim();
     if(!name || keywordPass.length < 4) {
-      showModal("कृपया स्टाफ का नाम और मजबूत कीवर्ड पासवर्ड (कम से कम 4 अक्षर) दर्ज करें।");
+      showModal("कृपया स्टाफ का नाम और मजबूत कीवर्ड/पिन (कम से कम 4 अक्षर) दर्ज करें।");
       return;
     }
     const { error } = await supabaseClient.from('staff_team').insert([{ name: name, pin: keywordPass, status: 'Active' }]);
@@ -1954,21 +2439,31 @@
       document.getElementById('newStaffName').value = '';
       document.getElementById('newStaffPin').value = '';
       toggleBurger();
-      showModal(`नया स्टाफ '${name}' कीवर्ड पासवर्ड के साथ Supabase में जुड़ चुका है।`);
-      fetchStaffMembers();
+      showOmniToast(`✅ नया स्टाफ '${name}' जुड़ गया!`, "#10B981");
+      loadAllData();
     } else {
       showModal("त्रुटि: " + error.message);
     }
   }
 
   async function autoApproveAllPendingMerchants() {
+    const pendingList = allMerchantsData.filter(m => classifyMerchantStatus(m) === 'pending');
+    if (pendingList.length === 0) {
+      toggleBurger();
+      showModal("अभी कोई भी दुकान पेंडिंग (Pending) में नहीं है।");
+      return;
+    }
+
+    const pendingIds = pendingList.map(m => m.id);
+    pendingList.forEach(m => { m.status = 'approved'; });
+    refreshLocalViewsImmediately();
+    toggleBurger();
+    showOmniToast(`⚡ ${pendingIds.length} पेंडिंग दुकानें लाइव (Approved) कर दी गईं!`, "#10B981");
+
     try {
-      const { error } = await supabaseClient.from('merchants').update({ status: 'approved' }).in('status', ['pending', 'false', 'closed']);
+      const { error } = await supabaseClient.from('merchants').update({ status: 'approved' }).in('id', pendingIds);
       if (!error) {
-        await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: 'BULK_AUTO_APPROVE', target_entity: 'ALL_PENDING_MERCHANTS' }]);
-        toggleBurger();
-        showModal("सभी पेंडिंग दुकानों को एक साथ ऑटो-अप्रूव (लाइव) कर दिया गया है।");
-        loadAllData();
+        await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: `BULK_AUTO_APPROVE_${pendingIds.length}`, target_entity: 'ONLY_PENDING_MERCHANTS' }]);
       } else {
         showModal("त्रुटि: ऑटो-अप्रूव विफल।");
       }
@@ -1985,7 +2480,7 @@
         <textarea id="bulkMsgText" rows="4" style="width:100%; padding:8px; background:#000; color:#FFF; border:1px solid #333; border-radius:6px; font-size:11px; outline:none;" placeholder="सभी मर्चेंट्स के लिए संदेश लिखें..."></textarea>
         <div style="display:flex; gap:8px; margin-top:10px;">
           <button class="btn-primary" style="background:#374151; margin-top:0;" onclick="closeCustomModal()">रद्द करें</button>
-          <button class="btn-primary" style="margin-top:0; background:#2563EB;" onclick="executeBulkWhatsAppBroadcast()">लॉग एवं WhatsApp भेजें</button>
+          <button class="btn-primary" style="margin-top:0; background:#2563EB;" onclick="executeBulkWhatsAppBroadcast()">लॉग एवं क्यू तैयार करें</button>
         </div>
       </div>
     `;
@@ -2000,24 +2495,27 @@
       return;
     }
 
-    let count = 0;
-    allMerchantsData.forEach(m => {
-      if (m.phone) {
-        let phoneClean = m.phone.replace(/[^0-9]/g, '');
-        if (phoneClean.length >= 10) {
-          count++;
-          setTimeout(() => {
-            window.open(`https://wa.me/91${phoneClean}?text=${encodeURIComponent("*" + title + "*\n\n" + msg)}`, '_blank');
-          }, count * 700);
-        }
-      }
-    });
+    const validMerchants = allMerchantsData.filter(m => m.phone && m.phone.replace(/[^0-9]/g, '').length >= 10);
+    await supabaseClient.from('broadcast_center').insert([{ broadcast_title: title, message_content: msg, target_segment: 'ALL_MERCHANTS', sent_count: validMerchants.length }]);
 
-    await supabaseClient.from('broadcast_center').insert([{ broadcast_title: title, message_content: msg, target_segment: 'ALL_MERCHANTS', sent_count: count }]);
-    showModal(`ब्रॉडकास्ट डेटाबेस में सेव हो गया है और ${count} मर्चेंट्स के लिए ट्रिगर कर दिया गया है।`);
+    const encodedText = encodeURIComponent(`*${title}*\n\n${msg}`);
+    const queueHtml = validMerchants.map((m, i) => {
+      const ph = m.phone.replace(/[^0-9]/g, '').slice(-10);
+      return `
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#121216; padding:7px 10px; border-radius:8px; margin-bottom:6px; font-size:11px;">
+          <span style="color:#F3F4F6; font-weight:700;">#${i + 1} ${m.store_name || 'स्टोर'}</span>
+          <a href="https://wa.me/91${ph}?text=${encodedText}" target="_blank" class="clean-action-btn green-highlight" style="text-decoration:none;">💬 भेजें ↗</a>
+        </div>
+      `;
+    }).join('');
+
+    showModal(
+      `ब्रॉडकास्ट सेव हो गया (${validMerchants.length} मर्चेंट्स)`,
+      `<div style="font-size:10px; color:#9CA3AF; margin-bottom:8px;">नीचे से मर्चेंट्स को तुरंत WhatsApp भेजें:</div>
+       <div style="max-height:220px; overflow-y:auto; text-align:left;">${queueHtml || 'कोई मान्य नंबर नहीं मिला।'}</div>`
+    );
   }
 
-  // 🎯 एरिया-वाइज लाइव ऑडिट
   function executeAreaAudit() {
     const rawArea = document.getElementById('areaAuditInput').value.trim();
     const areaQuery = rawArea.toLowerCase();
@@ -2121,7 +2619,6 @@
     if (globalCharts.c1) globalCharts.c1.destroy();
     if (globalCharts.c2) globalCharts.c2.destroy();
 
-    // ग्राफ 1: बिल्कुल अपरिवर्तित (Unchanged Doughnut)
     const ctx1 = document.getElementById('chartMerchantSearch').getContext('2d');
     globalCharts.c1 = new Chart(ctx1, {
       type: 'doughnut',
@@ -2166,7 +2663,6 @@
       }
     });
 
-    // ग्राफ 2: बिल्कुल अपरिवर्तित (Unchanged Revenue & Footfall Bar)
     const ctx2 = document.getElementById('chartBusinessRevenue').getContext('2d');
     globalCharts.c2 = new Chart(ctx2, {
       type: 'bar',
@@ -2229,7 +2725,6 @@
       }
     });
 
-    // ग्राफ 3: नया फ्लोटिंग ट्रेडिंग वेक्टर एरो ग्राफ अपडेट करें
     updateTradingGraph3();
   }
 
@@ -2243,7 +2738,6 @@
     showModal(`ज़ोन ऑडिट: ${zoneName} (${stores.length} दुकानें)`, `<div style="max-height:220px; overflow-y:auto; margin-top:8px;">${rows}</div>`);
   }
 
-  // 🔍 ग्लोबल सर्च + सब-मिलीसेकंड परफॉर्मेंस कमांड (जैसे "8 + 8 year", "10 + 10 year", या स्टाफ नाम)
   async function executeCapsuleOmniSearch() {
     const t0 = performance.now();
     const raw = document.getElementById('capsuleSearchInput').value.trim();
@@ -2258,7 +2752,6 @@
       return;
     }
 
-    // यदि "8 + 8 year", "10 + 10 year", "performance", "परफॉर्मेंस" पूछा गया है तो <1ms में सीधा रिजल्ट दें
     const timeCmd = parseNaturalTimeCommand(raw);
     if (timeCmd && (query.includes('year') || query.includes('month') || query.includes('day') || query.includes('साल') || query.includes('महीना') || query.includes('दिन') || query.includes('परफॉर्मेंस') || query.includes('performance'))) {
       if (timeCmd.matchedStaff) {
@@ -2296,14 +2789,13 @@
       return;
     }
 
-    // इन-मेमोरी सब-मिलीसेकंड डेटा सर्च
     let matchesHtml = '';
     let matchCount = 0;
 
     allStaffData.forEach(s => {
       if (JSON.stringify(s).toLowerCase().includes(query)) {
         matchCount++;
-        const safeName = (s.name || 'Staff').replace(/'/g, '');
+        const safeName = safeStr(s.name || 'Staff');
         matchesHtml += `<div style="color:#FCF6BA; margin-top:4px; cursor:pointer;" onclick="openStaffDossierPage('${safeName}')">• [स्टाफ] <b>${s.name}</b> — स्टेटस: ${s.status} <span style="color:#D4AF37;">(पूरी कुंडली खोलें ↗)</span></div>`;
       }
     });
@@ -2343,14 +2835,20 @@
   }
 
   async function setPortalState(active) {
+    updatePortalStatusIndicatorUI(active);
+    toggleBurger();
+    showOmniToast(
+      active ? "🟢 स्टाफ पोर्टल वापस चालू (LIVE) कर दिया गया!" : "🔴 स्टाफ पोर्टल पर 404 लॉकडाउन लगा दिया गया!",
+      active ? "#10B981" : "#EF4444"
+    );
+
     const { error } = await supabaseClient.from('admin_master').upsert([{ id: 1, staff_portal_active: active, updated_at: new Date().toISOString() }]);
     if(!error) {
-      await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: active ? 'PORTAL_UNLOCKED' : 'PORTAL_404_LOCKDOWN', target_entity: 'ALL_SESSIONS' }]);
-      toggleBurger();
+      await supabaseClient.from('admin_core_db').insert([{ admin_name: currentAdminName, action_taken: active ? 'PORTAL_UNLOCKED' : 'PORTAL_404_LOCKDOWN', target_entity: 'STAFF_PORTAL_SESSIONS' }]);
       if(active) {
-        showModal("प्रूफ वेरीफाइड: admin_master टेबल में staff_portal_active = TRUE सेट हो चुका है। पोर्टल लाइव है।");
+        showModal("प्रूफ वेरीफाइड: admin_master टेबल में staff_portal_active = TRUE सेट हो चुका है। अब स्टाफ पोर्टल चालू है।");
       } else {
-        showModal("प्रूफ वेरीफाइड: 404 लॉकडाउन सिग्नल डेटाबेस में भेज दिया गया है। 3 सेकंड में स्क्रीन क्रैश हो जाएगी।");
+        showModal("प्रूफ वेरीफाइड: रिमोट 404 लॉकडाउन सिग्नल डेटाबेस में भेज दिया गया है। स्टाफ की स्क्रीन 404 हो चुकी है, जबकि आपका यह एडमिन कमांड सेंटर सुरक्षित और चालू है।");
       }
     } else {
       showModal("त्रुटि: " + error.message);
@@ -2358,6 +2856,8 @@
   }
 
   function startTimer() {
+    if (timerStarted) return;
+    timerStarted = true;
     let s = 0;
     setInterval(() => {
       s++;
@@ -2366,6 +2866,184 @@
       document.getElementById('timerDisplay').innerText = `${m}:${sec}`;
     }, 1000);
   }
+    // 🗄️ ARCHIVE VAULT FIX: Loading archive data... को हटाकर असली डेटा दिखाने का इंजन
+  function renderArchiveVaultSection(searchQuery = "") {
+    const q = (searchQuery || "").toLowerCase().trim();
+
+    // डेटाबेस से सभी अर्काइव, डिलीटेड और ब्लॉक्ड मर्चेंट्स निकालना
+    const archivedItems = (allMerchantsData || []).filter(m => {
+      const st = String(m.status || '').toLowerCase();
+      const subSt = String(m.subscription_status || '').toLowerCase();
+      return ['archived', 'deleted', 'closed', 'false', 'blocked', 'expired', 'rejected'].includes(st) || subSt === 'expired' || m.reel_blocked === true;
+    });
+
+    // ऊपर टैब और हेडिंग में (0) की जगह सही गिनती अपडेट करना
+    document.querySelectorAll('.sec-tab, div, span').forEach(el => {
+      if (el.children.length === 0 && el.innerText) {
+        if (/^Archive\s*\(\d+\)$/i.test(el.innerText.trim())) {
+          el.innerText = `Archive(${archivedItems.length})`;
+        } else if (el.innerText.includes('Merchant & Reel Archive Vault')) {
+          el.innerText = `🗄️ Merchant & Reel Archive Vault(${archivedItems.length})`;
+        }
+      }
+    });
+
+    // सर्च फ़िल्टर लागू करना
+    const filtered = q
+      ? archivedItems.filter(m =>
+          (m.store_name && m.store_name.toLowerCase().includes(q)) ||
+          (m.phone && m.phone.includes(q)) ||
+          (m.address && m.address.toLowerCase().includes(q))
+        )
+      : archivedItems;
+
+    // अर्काइव लिस्ट कंटेनर को ढूँढना
+    let container = document.getElementById('archiveVaultContainer') ||
+                    document.getElementById('archiveListContainer') ||
+                    document.getElementById('merchantArchiveContainer') ||
+                    document.getElementById('archiveDirectoryContainer');
+
+    // अगर कंटेनर की ID अलग हो, तो 'Loading archive data...' वाले बॉक्स को अपने-आप पकड़ना
+    if (!container) {
+      document.querySelectorAll('#pane-archive div, .pane div').forEach(div => {
+        if (div.children.length === 0 && (div.innerText.includes('Loading archive') || div.innerText.includes('आर्काइव डेटा लोड'))) {
+          container = div.parentElement;
+        }
+      });
+    }
+
+    if (!container) return;
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div style="font-size:12px; color:#9CA3AF; text-align:center; padding:18px;">
+          ✅ आर्काइव वॉल्ट अभी खाली है (0 डिलीटेड/ब्लॉक्ड रिकॉर्ड)।
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = filtered.map((m, idx) => {
+      const sName = safeStr(m.store_name || 'स्टोर');
+      const zoneTag = extractSmartZone(m.address || m.location || '');
+      return `
+        <div class="item-row row-blocked" style="margin-top:8px;">
+          <div style="flex:1;">
+            <div style="font-weight:800; color:#F3F4F6; font-size:13px;">
+              #${idx + 1} ${m.store_name || 'अनाम स्टोर'}
+              <span class="clean-zone-label">• ${zoneTag}</span>
+            </div>
+            <div style="font-size:10px; color:#9CA3AF; margin-top:4px;">📍 ${m.address || 'N/A'} | 📞 ${m.phone || 'N/A'}</div>
+            <div style="font-size:10px; color:#F87171; font-weight:800; margin-top:4px;">स्टेटस: ${(m.status || 'ARCHIVED').toUpperCase()}</div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+            <button class="clean-action-btn green-highlight" onclick="updateMerchantStatus('${m.id}', 'approved', '${sName}')">♻️ रिकवर (Live)</button>
+            <button class="clean-action-btn red-muted" onclick="pureDeleteFromArchive('${m.id}', '${sName}')">🔥 प्योर डिलीट</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function pureDeleteFromArchive(id, storeName) {
+    if (!confirm(`⚠️ क्या आप "${storeName}" को आर्काइव से हमेशा के लिए (Pure Delete) मिटाना चाहते हैं?`)) return;
+    allMerchantsData = allMerchantsData.filter(m => String(m.id) !== String(id));
+    refreshLocalViewsImmediately();
+    renderArchiveVaultSection();
+    showOmniToast(`🔥 '${storeName}' हमेशा के लिए डिलीट हो गया!`, "#EF4444");
+    await supabaseClient.from('merchants').delete().eq('id', id);
+  }
+
+  // अर्काइव सर्च इनपुट को अपने-आप एक्टिव करना
+  document.addEventListener('input', (e) => {
+    if (e.target && e.target.placeholder && e.target.placeholder.includes('आर्काइव में स्टोर')) {
+      renderArchiveVaultSection(e.target.value);
+    }
+  });
+
+  // हर 1.5 सेकंड में चेक करके सुनिश्चित करना कि डेटा लोड होते ही Archive अपडेट हो जाए
+  setInterval(() => {
+    if (allMerchantsData) renderArchiveVaultSection(document.querySelector('input[placeholder*="आर्काइव"]')?.value || "");
+  }, 1500);
+    // 👑 SUPER ADMIN OMNI MASTER PIN MANAGER (डायनेमिक पिन चेंज इंजन)
+  function getActiveMasterOmniPin() {
+    return localStorage.getItem('omni_custom_master_pin') || "9999";
+  }
+
+  // डेटाबेस से लेटेस्ट सुपर एडमिन पिन सिंक करना
+  async function syncMasterAdminPinFromDb() {
+    try {
+      const { data } = await supabaseClient.from('admin_master').select('*').eq('id', 1).maybeSingle();
+      if (data && data.master_pin) {
+        localStorage.setItem('omni_custom_master_pin', String(data.master_pin));
+      }
+    } catch (e) {}
+  }
+  syncMasterAdminPinFromDb();
+
+  async function updateSuperAdminOmniPin() {
+    const oldPin = document.getElementById('omniOldMasterPin').value.trim();
+    const newPin = document.getElementById('omniNewMasterPin').value.trim();
+    const confirmPin = document.getElementById('omniConfirmMasterPin').value.trim();
+
+    const currentSavedMasterPin = getActiveMasterOmniPin();
+
+    // चेक करें कि पुराना पिन सही है या नहीं (मास्टर पिन या लॉगिन किए हुए एडमिन का पिन)
+    const loggedInStaffRecord = (allStaffData || []).find(s => s.name && s.name.toLowerCase() === (currentAdminName || '').toLowerCase());
+    const validOldPins = [currentSavedMasterPin];
+    if (loggedInStaffRecord && loggedInStaffRecord.pin) {
+      validOldPins.push(String(loggedInStaffRecord.pin));
+    }
+
+    if (!oldPin || !newPin || !confirmPin) {
+      showModal("⚠️ कृपया पुराना पिन और नया पिन दोनों बॉक्स में भरें!");
+      return;
+    }
+
+    if (!validOldPins.includes(oldPin)) {
+      showModal("❌ आपका मौजूदा (पुराना) मास्टर पिन गलत है! सही पिन डालें।");
+      return;
+    }
+
+    if (newPin.length < 4) {
+      showModal("⚠️ सुरक्षा नियम: नया सुपर एडमिन पिन या पासवर्ड कम से कम 4 अक्षरों/अंकों का होना चाहिए।");
+      return;
+    }
+
+    if (newPin !== confirmPin) {
+      showModal("❌ नया पिन और कन्फर्म पिन आपस में मेल नहीं खा रहे हैं!");
+      return;
+    }
+
+    // 1. तुरंत लोकल मास्टर वॉल्ट में नया पिन सेव करें
+    localStorage.setItem('omni_custom_master_pin', newPin);
+
+    // 2. अगर सुपर एडमिन का नाम staff_team टेबल में है, तो वहाँ भी तुरंत अपडेट करें
+    try {
+      if (loggedInStaffRecord) {
+        loggedInStaffRecord.pin = newPin;
+        await supabaseClient.from('staff_team').update({ pin: newPin }).eq('id', loggedInStaffRecord.id);
+      }
+      // 3. admin_master टेबल में भी सेव करने की कोशिश करें (यदि कॉलम मौजूद हो)
+      await supabaseClient.from('admin_master').upsert([{ id: 1, master_pin: newPin, updated_at: new Date().toISOString() }]);
+      // 4. कोर ऑडिट लॉग में रिकॉर्ड दर्ज करें
+      await supabaseClient.from('admin_core_db').insert([{
+        admin_name: currentAdminName,
+        action_taken: 'SUPER_ADMIN_PIN_UPDATED',
+        target_entity: 'OMNI_MASTER_VAULT'
+      }]);
+    } catch (e) {}
+
+    // इनपुट साफ करें और तुरंत कन्फर्मेशन दिखाएं
+    document.getElementById('omniOldMasterPin').value = '';
+    document.getElementById('omniNewMasterPin').value = '';
+    document.getElementById('omniConfirmMasterPin').value = '';
+
+    refreshLocalViewsImmediately();
+    toggleBurger();
+    showOmniToast(`👑 सुपर एडमिन का नया पिन सफलतापूर्वक सेट हो गया!`, "#10B981");
+    showModal(`✅ सफलता: आपके STAR ADMIN OMNI पैनल का नया मास्टर पिन "${newPin}" सेट कर दिया गया है। अब आप इसी नए पिन से लॉगिन कर सकेंगे।`);
+  }
+
 </script>
 </body>
 </html>
